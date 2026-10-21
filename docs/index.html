@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arecibo Zero</title>
+<meta name="description" content="Simulated first contact: which transmissions can a neural mind with no priors understand? Radix, noisy channels, blind decipherment and evolved messages.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f6f2e8;
+  --paper-2: #ede7d8;
+  --rule: #d9d1bd;
+  --ink: #1d1a14;
+  --ink-2: #5a5446;
+  --ink-3: #8a8270;
+  --signal: #d9480f;
+  --signal-soft: #f7d9c8;
+  --blue: #2a78d6;
+  --green: #1b8a5a;
+  --seq-0: #f4f7fc; --seq-1: #a9c8ef; --seq-2: #2a78d6; --seq-3: #0d3d7a;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --hole: #e4dcc8;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12141a; --paper-2: #1a1d25; --rule: #2c303b;
+    --ink: #ece6d6; --ink-2: #b4ad9c; --ink-3: #7d7768;
+    --signal: #ff7a3d; --signal-soft: #3a2418;
+    --blue: #3987e5; --green: #3fbf86;
+    --seq-0: #1a2130; --seq-1: #1f4a80; --seq-2: #3987e5; --seq-3: #b9d6fa;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --hole: #0c0e12;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12141a; --paper-2: #1a1d25; --rule: #2c303b;
+  --ink: #ece6d6; --ink-2: #b4ad9c; --ink-3: #7d7768;
+  --signal: #ff7a3d; --signal-soft: #3a2418;
+  --blue: #3987e5; --green: #3fbf86;
+  --seq-0: #1a2130; --seq-1: #1f4a80; --seq-2: #3987e5; --seq-3: #b9d6fa;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --hole: #0c0e12;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 15px/1.6 "IBM Plex Mono", ui-monospace, monospace;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--rule) 45%, transparent) 31px 32px);
+}
+/* tractor-feed margins */
+.feed { position: fixed; top: 0; bottom: 0; width: 28px; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at 14px 16px, var(--hole) 5px, transparent 5.5px) 0 0 / 28px 32px repeat-y;
+  border-right: 1px dashed var(--rule); }
+.feed.l { left: 0; } .feed.r { right: 0; border-right: 0; border-left: 1px dashed var(--rule); }
+@media (max-width: 720px) { .feed { display: none; } }
+main { position: relative; z-index: 1; max-width: 1060px; margin: 0 auto; padding: 0 56px 80px; }
+@media (max-width: 720px) { main { padding: 0 16px 60px; } }
+h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+h2 { font-size: clamp(26px, 4vw, 38px); line-height: 1.1; margin-bottom: 14px; }
+h3 { font-size: 19px; margin: 22px 0 8px; }
+p { margin: 0 0 14px; max-width: 70ch; }
+a { color: var(--signal); }
+.kicker { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); }
+.muted { color: var(--ink-2); }
+section { padding: 72px 0 8px; border-top: 1px solid var(--rule); }
+section:first-of-type { border-top: 0; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: start; padding-top: 64px; }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; gap: 28px; } }
+.hero h1 { font-size: clamp(54px, 10vw, 112px); line-height: .9; font-weight: 700; font-variation-settings: "opsz" 144; }
+.hero h1 em { font-style: italic; font-weight: 300; color: var(--signal); }
+.hero .lede { font-family: Fraunces, Georgia, serif; font-size: clamp(19px, 2.4vw, 24px); line-height: 1.35; margin: 26px 0 18px; max-width: 30ch; font-weight: 400; }
+.hero .meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; margin-top: 22px; }
+.hero .meta a { text-decoration: none; border-bottom: 1px solid currentColor; }
+.raster-wrap { text-align: center; }
+#raster { image-rendering: pixelated; display: block; margin: 0 auto; }
+.raster-cap { font-size: 11px; color: var(--ink-3); margin-top: 8px; max-width: 170px; line-height: 1.4; text-align: left; }
+
+/* pipeline */
+.pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 26px 0 10px; border: 1px solid var(--ink); }
+.pipe div { padding: 16px 14px; border-right: 1px solid var(--ink); font-size: 13px; }
+.pipe div:last-child { border-right: 0; }
+.pipe b { display: block; font-family: Fraunces, serif; font-size: 18px; margin-bottom: 4px; }
+.pipe .n { color: var(--signal); font-size: 12px; }
+@media (max-width: 720px) { .pipe { grid-template-columns: 1fr 1fr; } .pipe div:nth-child(2) { border-right: 0; } .pipe div:nth-child(-n+2) { border-bottom: 1px solid var(--ink); } }
+
+/* glyph reader */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+.tabs button, .btn { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid var(--ink-2); background: transparent; color: var(--ink); cursor: pointer; border-radius: 2px; }
+.tabs button[aria-pressed="true"], .btn.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.sig { border-color: var(--signal); color: var(--signal); }
+.btn.sig.on { background: var(--signal); color: var(--paper); }
+.tape { background: var(--paper-2); border: 1px solid var(--rule); padding: 16px; min-height: 120px; display: flex; flex-wrap: wrap; gap: 4px 3px; align-content: flex-start; }
+.g { display: inline-flex; flex-direction: column; align-items: center; width: 22px; }
+.g svg { width: 18px; height: 18px; display: block; }
+.g svg rect { fill: var(--ink); }
+.g.op svg rect { fill: var(--signal); }
+.g span { font-size: 10px; line-height: 1.2; height: 12px; color: var(--ink-2); opacity: 0; transition: opacity .25s; }
+.tape.tr .g span { opacity: 1; }
+.g.brk { width: 10px; }
+.legend-row { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+
+/* heatmap table */
+.hm { border-collapse: collapse; font-size: 12px; width: 100%; }
+.hm th { font-weight: 500; color: var(--ink-2); padding: 4px 6px; text-align: right; white-space: nowrap; }
+.hm thead th { text-align: center; }
+.hm td { padding: 0; border: 2px solid var(--paper); text-align: center; height: 30px; min-width: 44px; font-variant-numeric: tabular-nums; cursor: default; position: relative; }
+.hm td.na { background: repeating-linear-gradient(45deg, transparent 0 4px, var(--rule) 4px 5px); }
+.scroll { overflow-x: auto; }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--paper); padding: 6px 9px; font-size: 12px; border-radius: 3px; z-index: 10; opacity: 0; transition: opacity .1s; max-width: 260px; }
+.scale { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-3); margin-top: 8px; }
+.scale i { display: block; width: 160px; height: 8px; background: linear-gradient(90deg, var(--seq-0), var(--seq-1), var(--seq-2), var(--seq-3)); border: 1px solid var(--rule); }
+
+/* charts */
+svg.chart { width: 100%; height: auto; overflow: visible; }
+svg.chart text { font-family: "IBM Plex Mono", monospace; font-size: 11px; fill: var(--ink-2); }
+svg.chart .axis line, svg.chart .grid line { stroke: var(--rule); }
+svg.chart .zero { stroke: var(--ink-3); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+.finding { border-left: 3px solid var(--signal); padding: 4px 0 4px 14px; margin: 16px 0 22px; font-family: Fraunces, serif; font-size: 18px; line-height: 1.4; max-width: 62ch; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin: 4px 0 8px; }
+.legend i { display: inline-block; width: 12px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+
+/* decipher */
+.dec { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.dec .card { border: 1px solid var(--rule); background: var(--paper-2); padding: 10px 12px; font-size: 12px; }
+.dec .card b { font-family: Fraunces, serif; font-size: 16px; display: block; }
+.ok { color: var(--green); } .bad { color: var(--signal); }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 10px 0; }
+.steps li { counter-increment: s; padding: 10px 0 10px 44px; position: relative; border-bottom: 1px dotted var(--rule); max-width: 78ch; }
+.steps li::before { content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: 10px; font-family: Fraunces, serif; font-size: 22px; color: var(--signal); line-height: 1; }
+footer { margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink); font-size: 12px; color: var(--ink-3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.theme { position: fixed; top: 12px; right: 40px; z-index: 5; }
+@media (max-width: 720px) { .theme { right: 12px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.askbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 16px 0; }
+.askbar input, .askbar select { font: inherit; font-size: 16px; width: 76px; padding: 6px 8px; background: var(--paper-2); color: var(--ink); border: 1px solid var(--ink-2); border-radius: 2px; }
+.askbar select { width: auto; }
+.qa-out { background: var(--paper-2); border: 1px solid var(--rule); padding: 16px; min-height: 140px; }
+.qa-line { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 3px; margin: 6px 0 12px; }
+.qa-line .lbl { font-size: 11px; color: var(--ink-3); width: 100%; letter-spacing: .12em; text-transform: uppercase; }
+.qa-out .g span { opacity: 1; }
+.conf { display: block; height: 3px; width: 18px; background: var(--rule); margin-top: 2px; }
+.conf i { display: block; height: 100%; background: var(--signal); }
+.verdict { font-family: Fraunces, serif; font-size: 18px; margin-top: 4px; }
+.badge { display: inline-block; font-size: 11px; padding: 2px 7px; border: 1px solid var(--ink-3); border-radius: 10px; color: var(--ink-2); margin-left: 8px; vertical-align: middle; font-family: "IBM Plex Mono", monospace; }
+.pending { color: var(--ink-3); font-style: italic; }
+</style>
+</head>
+<body>
+<div class="feed l"></div><div class="feed r"></div>
+<button class="btn theme" id="themeBtn" aria-label="Toggle colour theme">◐</button>
+<div class="tip" id="tip"></div>
+<main>
+
+<section class="hero">
+  <div>
+    <div class="kicker">A simulated first contact · Oct 2026</div>
+    <h1>Arecibo <em>Zero</em></h1>
+    <p class="lede">Can a mind with no shared language and no built-in knowledge learn arithmetic from a message alone?</p>
+    <p class="muted">We write transmissions. The receivers are freshly initialised neural networks that read nothing but the transmission. Then they sit an exam of sums that never appeared in the message. Then we flip roles and decode an unknown message by reading the mind of a network trained on it.</p>
+    <div class="meta">
+      <a href="https://github.com/PS12007/arecibo-zero">code ↗</a>
+      <a href="arecibo-zero.pdf">technical report (PDF) ↗</a>
+      <a href="#decipher">skip to the decipherment ↓</a>
+    </div>
+  </div>
+  <div class="raster-wrap">
+    <canvas id="raster" width="23" height="73" aria-label="1679 bits of a real transmission drawn as a 23 by 73 raster"></canvas>
+    <div class="raster-cap">1,679 bits of a real transmission (base 10, least-significant digit first, 5-bit codewords), drawn 23 × 73 like the 1974 Arecibo message.</div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">The setup</div>
+  <h2>Sender, channel, stranger, exam</h2>
+  <div class="pipe">
+    <div><span class="n">01 · sender</span><b>Write</b>Pick a number system and what to talk about: sums, products, comparisons, counting. Fixed bit budget.</div>
+    <div><span class="n">02 · channel</span><b>Transmit</b>As symbols, or as raw bits with unknown word width and random bit flips.</div>
+    <div><span class="n">03 · receiver</span><b>Listen</b>A randomly initialised transformer or LSTM learns to predict the next symbol of the message. Nothing else.</div>
+    <div><span class="n">04 · exam</span><b>Answer</b>Sums whose operand pairs never appeared, in either order. Only a receiver that found the rule can answer.</div>
+  </div>
+  <p class="muted">A quarter of all operand pairs below 64 are held out of every message. The exam is posed in the message's own symbols, prefixed by a real stretch of the transmission, and graded on the full answer.</p>
+</section>
+
+<section>
+  <div class="kicker">Listen</div>
+  <h2>What the receiver hears</h2>
+  <p>Each symbol is drawn as an arbitrary glyph, because the receiver has no idea what any of them mean. Switch designs to see how the same mathematics looks in different number systems, then translate.</p>
+  <div class="tabs" id="designTabs"></div>
+  <div class="tape" id="tape"></div>
+  <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap: wrap;">
+    <button class="btn sig" id="trBtn" aria-pressed="false">translate</button>
+    <span class="legend-row" id="tapeInfo"></span>
+  </div>
+</section>
+
+<section id="ask">
+  <div class="kicker">Talk to it</div>
+  <h2>Ask the alien</h2>
+  <p>This is a real receiver, running in your browser. It is a 418k-parameter transformer that has only ever heard one transmission: 2<sup>17</sup> bits of decimal sums, products, comparisons and counting, digits least-significant first. It was never told what any symbol means. Your question is sent in its own symbols, after a stretch of the original transmission.</p>
+  <div class="askbar">
+    <input id="qa" type="number" min="0" max="99" value="37" aria-label="first number">
+    <select id="qop" aria-label="operation">
+      <option value="+">+</option><option value="*">×</option><option value="?">compare</option><option value=",">count on from</option>
+    </select>
+    <input id="qb" type="number" min="0" max="99" value="48" aria-label="second number">
+    <button class="btn sig on" id="askBtn">transmit</button>
+    <button class="btn" id="rndBtn">random unseen sum</button>
+  </div>
+  <div class="qa-out" id="qaOut"><p class="pending">Loading the receiver (2 MB)…</p></div>
+</section>
+
+<section id="radix">
+  <div class="kicker">Finding 1 · number systems</div>
+  <h2>Which numbers does a stranger understand?</h2>
+  <p>Addition-only transmissions at five lengths. Each cell is the percentage of held-out sums answered exactly, averaged over receivers.</p>
+  <div class="tabs" id="radixTabs"></div>
+  <div class="scroll"><table class="hm" id="radixTable"></table></div>
+  <div class="scale"><span>0%</span><i></i><span>100%</span><span style="margin-left:12px">▨ not run</span></div>
+  <div id="radixFinding"></div>
+</section>
+
+<section id="content">
+  <div class="kicker">Finding 2 · what to talk about</div>
+  <h2>Does teaching other maths help addition?</h2>
+  <p>Same budget, different content. Part of the message is spent on counting, comparisons or products instead of sums.</p>
+  <div id="contentChart"><p class="pending">Running…</p></div>
+  <div id="contentFinding"></div>
+</section>
+
+<section id="channel">
+  <div class="kicker">Finding 3 · the channel</div>
+  <h2>Raw bits, no word boundaries, cosmic noise</h2>
+  <p>The receiver gets only 0s and 1s and is never told that symbols are 5 bits wide. Bits flip at random. The sender can repeat every bit three times, but repeats count against the budget.</p>
+  <div id="channelChart"><p class="pending">Running…</p></div>
+  <div id="channelFinding"></div>
+</section>
+
+<section id="decipher">
+  <div class="kicker">Finding 4 · role reversal</div>
+  <h2>Reading a mind to read a message</h2>
+  <p>Now <em>we</em> are the receivers. A message arrives in a design we don't know: radix, digit order and symbol meanings are hidden, and the symbols are shuffled. We train a network on it, then decipher the message by questioning that network.</p>
+  <ol class="steps">
+    <li><b>Which symbols are digits?</b> The network expects digits to be able to repeat ("11") and expects them in the same places as one another. Operators are never expected twice in a row.</li>
+    <li><b>Which symbol separates a count?</b> The operator that chains numerals: <i>a ⋄ b ⋄ c ⋄ …</i></li>
+    <li><b>What is each digit worth? Ask it to count.</b> We splice "<i>x</i> ⋄" into the message and score every one- and two-digit continuation. The digit that is nobody's successor is zero. The two-symbol successor of the last digit is "10", and the order of its two symbols reveals whether digits are written most- or least-significant first.</li>
+    <li><b>What do the operators mean?</b> With numerals decoded, the symbol pattern <i>a ⊕ b ⊜ c</i> that makes statements true as sums is "+", the one that makes them true as products is "×", and the one whose single-symbol answer depends only on which side is bigger is a comparison, with its three results.</li>
+  </ol>
+  <div id="decipherCards"><p class="pending">Running…</p></div>
+  <div id="decipherFinding"></div>
+</section>
+
+<section id="evolve">
+  <div class="kicker">Finding 5 · evolved transmissions</div>
+  <h2>A message designed for minds we haven't met</h2>
+  <p>A genetic search over number systems, digit order and content mix, scored by how well a population of receivers understands the message. Then each champion is sent to fresh receivers of five kinds that the search never saw.</p>
+  <div id="evolveChart"><p class="pending">Running…</p></div>
+  <div id="transferTable"></div>
+  <div id="evolveFinding"></div>
+</section>
+
+<footer>
+  <span>Arecibo Zero · code, data and report: <a href="https://github.com/PS12007/arecibo-zero">github.com/PS12007/arecibo-zero</a></span>
+  <span>All receivers trained from scratch on one laptop GPU.</span>
+</footer>
+</main>
+
+<script>
+(() => {
+  // theme toggle ------------------------------------------------------------
+  const root = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  try { const t = localStorage.getItem('az-theme'); if (t) root.dataset.theme = t; } catch (e) {}
+  btn.onclick = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('az-theme', root.dataset.theme); } catch (e) {}
+    redraw();
+  };
+  const css = v => getComputedStyle(root).getPropertyValue(v).trim();
+  const tip = document.getElementById('tip');
+  const showTip = (e, html) => { tip.innerHTML = html; tip.style.opacity = 1;
+    const x = Math.min(e.clientX + 14, innerWidth - 270); tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px'; };
+  const hideTip = () => tip.style.opacity = 0;
+  const pct = v => (100 * v).toFixed(0) + '%';
+
+  // glyphs: deterministic 5x5 mirrored pixel letters, unique per symbol ------
+  const glyphCache = {};
+  function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng(seed) { return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const used = new Set();
+  function glyph(sym) {
+    if (glyphCache[sym]) return glyphCache[sym];
+    let r = rng(hash(sym)), cells, key;
+    do {
+      cells = [];
+      for (let y = 0; y < 5; y++) for (let x = 0; x < 3; x++) if (r() < 0.45) { cells.push([x, y]); if (x < 2) cells.push([4 - x, y]); }
+      key = cells.map(c => c.join(',')).sort().join(';');
+    } while (cells.length < 5 || used.has(key));
+    used.add(key);
+    const svg = `<svg viewBox="0 0 5 5" aria-hidden="true">${cells.map(([x, y]) => `<rect x="${x}" y="${y}" width="1" height="1"/>`).join('')}</svg>`;
+    return glyphCache[sym] = svg;
+  }
+  const meaning = s => s.startsWith('d') ? s.slice(1) : ({'+': '+', '*': '×', '=': '=', '?': '?', '<': '<', '>': '>', ',': ',', ';': ';'}[s] || s);
+  const opName = s => !s.startsWith('d');
+
+  window.AZ = { glyph, meaning, opName };
+  let D = null;
+  fetch('data.json').then(r => r.json()).then(d => { D = d; init(); });
+
+  function init() { drawRaster(); buildTape(); buildRadix(); redraw(); }
+  function redraw() { if (!D) return; drawRaster(); drawRadix(); drawContent(); drawChannel(); drawDecipher(); drawEvolve(); }
+
+  // raster ------------------------------------------------------------------
+  let rasterAnim = 0;
+  function drawRaster() {
+    const c = document.getElementById('raster'), R = D.raster, s = 6;
+    c.width = R.w * s; c.height = R.h * s; c.style.width = R.w * s + 'px';
+    const g = c.getContext('2d');
+    const on = css('--ink'), sig = css('--signal');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cancelAnimationFrame(rasterAnim);
+    let row = reduce ? R.h : 0;
+    const paint = upto => {
+      g.clearRect(0, 0, c.width, c.height);
+      for (let i = 0; i < R.w * upto; i++) if (R.bits[i]) {
+        const x = i % R.w, y = Math.floor(i / R.w);
+        g.fillStyle = Math.floor(i / R.symbol_width) % 9 === 0 ? sig : on;
+        g.fillRect(x * s, y * s, s - 1, s - 1);
+      }
+    };
+    const step = () => { paint(row); if (row < R.h) { row++; rasterAnim = requestAnimationFrame(step); } };
+    step();
+  }
+
+  // tape --------------------------------------------------------------------
+  const designNames = {unary: 'unary', b2: 'binary', 'b2-lsb': 'binary, LSB first', b10: 'decimal', 'b10-lsb': 'decimal, LSB first', b16: 'hexadecimal', mixed: 'decimal + counting, ×, comparisons'};
+  let curDesign = 'b10';
+  function buildTape() {
+    const tabs = document.getElementById('designTabs');
+    tabs.innerHTML = Object.keys(D.samples).map(k => `<button data-k="${k}" aria-pressed="${k === curDesign}">${designNames[k] || k}</button>`).join('');
+    tabs.onclick = e => { const k = e.target.dataset.k; if (!k) return; curDesign = k;
+      tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k)); renderTape(); };
+    const tr = document.getElementById('trBtn');
+    tr.onclick = () => { const t = document.getElementById('tape'); t.classList.toggle('tr');
+      const on = t.classList.contains('tr'); tr.classList.toggle('on', on); tr.setAttribute('aria-pressed', on); tr.textContent = on ? 'hide translation' : 'translate'; };
+    renderTape();
+  }
+  function renderTape() {
+    const S = D.samples[curDesign];
+    const toks = S.tokens.slice(0, curDesign === 'unary' ? 160 : 110);
+    document.getElementById('tape').innerHTML = toks.map(t => {
+      const s = S.vocab[t];
+      return `<span class="g${opName(s) ? ' op' : ''}${s === ';' ? ' end' : ''}">${glyph(s)}<span>${meaning(s)}</span></span>` + (s === ';' ? '<span class="g brk"></span>' : '');
+    }).join('');
+    document.getElementById('tapeInfo').textContent = `${S.vocab.length} distinct symbols · ${S.bits_per_symbol.toFixed(2)} bits each`;
+  }
+
+  // radix heatmap -------------------------------------------------------------
+  let radixArch = 'tf';
+  function seqColor(v) {
+    const stops = [css('--seq-0'), css('--seq-1'), css('--seq-2'), css('--seq-3')];
+    const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const t = Math.max(0, Math.min(1, v)) * 3, i = Math.min(2, Math.floor(t)), f = t - i;
+    const a = hex(stops[i]), b = hex(stops[i + 1]);
+    return `rgb(${a.map((x, j) => Math.round(x + (b[j] - x) * f)).join(',')})`;
+  }
+  function textOn(rgb) {
+    const [r, g, b] = rgb.match(/\d+/g).map(Number);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.5 ? '#0b0b0b' : '#ffffff';
+  }
+  function buildRadix() {
+    if (!D.radix) return;
+    const tabs = document.getElementById('radixTabs');
+    tabs.innerHTML = [['tf', 'transformer receivers'], ['lstm', 'LSTM receivers']].map(([k, n]) => `<button data-k="${k}" aria-pressed="${k === radixArch}">${n}</button>`).join('');
+    tabs.onclick = e => { const k = e.target.dataset.k; if (!k) return; radixArch = k;
+      tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k)); drawRadix(); };
+  }
+  const rlab = (b, l) => b === 1 ? 'unary' : `base ${b}${l ? ' · LSB first' : ''}`;
+  function drawRadix() {
+    if (!D.radix) return;
+    const rows = D.radix.filter(r => r.arch === radixArch);
+    const budgets = [...new Set(D.radix.filter(r => r.arch === 'tf').map(r => r.budget))].sort((a, b) => a - b);
+    const designs = [[1, false]]; [2, 3, 4, 6, 10, 16].forEach(b => designs.push([b, false], [b, true]));
+    const get = (b, l, B) => rows.find(r => r.base === b && r.lsb === l && r.budget === B);
+    const ink = css('--ink'), paper = css('--paper');
+    let h = `<thead><tr><th></th>${budgets.map(B => `<th>2<sup>${Math.log2(B)}</sup> bits</th>`).join('')}</tr></thead><tbody>`;
+    for (const [b, l] of designs) {
+      h += `<tr><th>${rlab(b, l)}</th>`;
+      for (const B of budgets) {
+        const r = get(b, l, B);
+        if (!r) { h += `<td class="na"></td>`; continue; }
+        const v = r.acc[0];
+        const bg = seqColor(v);
+        h += `<td style="background:${bg};color:${textOn(bg)}" data-t="${rlab(b, l)} · 2^${Math.log2(B)} bits<br>${pct(v)} held-out sums correct<br>± ${(100 * r.acc[1]).toFixed(0)} pts over ${r.acc[2]} receiver${r.acc[2] > 1 ? 's' : ''}">${(100 * v).toFixed(0)}</td>`;
+      }
+      h += '</tr>';
+    }
+    const t = document.getElementById('radixTable'); t.innerHTML = h + '</tbody>';
+    t.onmousemove = e => { const d = e.target.dataset && e.target.dataset.t; d ? showTip(e, d) : hideTip(); };
+    t.onmouseleave = hideTip;
+    const f = (D.findings || {}).radix;
+    if (f) document.getElementById('radixFinding').innerHTML = `<p class="finding">${f}</p>`;
+  }
+
+  // small svg helpers ---------------------------------------------------------
+  function axes(W, H, m, ymax, yticks) {
+    let s = '';
+    for (const t of yticks) { const y = m.t + (H - m.t - m.b) * (1 - t / ymax);
+      s += `<g class="grid"><line x1="${m.l}" x2="${W - m.r}" y1="${y}" y2="${y}"/></g><text x="${m.l - 6}" y="${y + 4}" text-anchor="end">${(100 * t).toFixed(0)}%</text>`; }
+    return s;
+  }
+
+  // content -------------------------------------------------------------------
+  function drawContent() {
+    const el = document.getElementById('contentChart');
+    if (!D.content) return;
+    const mixes = ['add', 'add+count', 'add+cmp', 'add+mul', 'all'];
+    const names = {add: 'sums only', 'add+count': '+ counting', 'add+cmp': '+ comparisons', 'add+mul': '+ products', all: 'all four'};
+    const budgets = [...new Set(D.content.filter(r => r.arch === 'tf').map(r => r.budget))].sort((a, b) => a - b);
+    const cols = [css('--s1'), css('--s2'), css('--s3')];
+    const W = 640, H = 260, m = {l: 46, r: 10, t: 10, b: 46};
+    const gw = (W - m.l - m.r) / mixes.length, bw = Math.min(22, (gw - 18) / budgets.length);
+    let s = axes(W, H, m, 1, [0, .25, .5, .75, 1]);
+    mixes.forEach((mx, i) => {
+      budgets.forEach((B, j) => {
+        const r = D.content.find(q => q.arch === 'tf' && q.mix === mx && q.budget === B && q.metric === 'add_heldout');
+        if (!r) return;
+        const v = r.acc[0], x = m.l + i * gw + (gw - budgets.length * (bw + 2)) / 2 + j * (bw + 2);
+        const y = m.t + (H - m.t - m.b) * (1 - v), h = (H - m.b) - y;
+        s += `<path d="M${x},${H - m.b} v${-Math.max(0, h - 4)} q0,-4 4,-4 h${bw - 8} q4,0 4,4 v${Math.max(0, h - 4)} z" fill="${cols[j]}" data-t="${names[mx]} · 2^${Math.log2(B)} bits<br>${pct(v)} held-out sums (± ${(100 * r.acc[1]).toFixed(0)}, n=${r.acc[2]})"/>`;
+        s += `<rect x="${x - 1}" y="${m.t}" width="${bw + 2}" height="${H - m.t - m.b}" fill="transparent" data-t="${names[mx]} · 2^${Math.log2(B)} bits<br>${pct(v)} held-out sums (± ${(100 * r.acc[1]).toFixed(0)}, n=${r.acc[2]})"/>`;
+      });
+      s += `<text x="${m.l + i * gw + gw / 2}" y="${H - m.b + 18}" text-anchor="middle">${names[mx]}</text>`;
+    });
+    s += `<line class="zero" x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}" stroke="${css('--ink-3')}"/>`;
+    el.innerHTML = `<div class="legend">${budgets.map((B, j) => `<span><i style="background:${cols[j]}"></i>2<sup>${Math.log2(B)}</sup> bits</span>`).join('')}<span>transformer receivers, held-out sums</span></div><svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
+    el.querySelector('svg').onmousemove = e => { const d = e.target.dataset && e.target.dataset.t; d ? showTip(e, d) : hideTip(); };
+    el.querySelector('svg').onmouseleave = hideTip;
+    const f = (D.findings || {}).content; if (f) document.getElementById('contentFinding').innerHTML = `<p class="finding">${f}</p>`;
+  }
+
+  // channel -------------------------------------------------------------------
+  function drawChannel() {
+    const el = document.getElementById('channelChart');
+    if (!D.channel) return;
+    const noises = [...new Set(D.channel.map(r => r.noise))].sort((a, b) => a - b);
+    const W = 640, H = 250, m = {l: 46, r: 120, t: 12, b: 40};
+    const xs = n => m.l + (W - m.l - m.r) * noises.indexOf(n) / Math.max(1, noises.length - 1);
+    const ys = v => m.t + (H - m.t - m.b) * (1 - v);
+    let s = axes(W, H, m, 1, [0, .25, .5, .75, 1]);
+    noises.forEach(n => s += `<text x="${xs(n)}" y="${H - m.b + 18}" text-anchor="middle">${(100 * n).toFixed(0)}%</text>`);
+    s += `<text x="${(m.l + W - m.r) / 2}" y="${H - 4}" text-anchor="middle">bits flipped</text>`;
+    const series = [[1, 'no coding', css('--s1')], [3, 'each bit ×3', css('--s2')]];
+    for (const [rep, name, col] of series) {
+      const pts = noises.map(n => D.channel.find(r => r.rep === rep && r.noise === n)).filter(Boolean);
+      if (!pts.length) continue;
+      s += `<polyline fill="none" stroke="${col}" stroke-width="2" points="${pts.map(p => `${xs(p.noise)},${ys(p.acc[0])}`).join(' ')}"/>`;
+      pts.forEach(p => s += `<circle cx="${xs(p.noise)}" cy="${ys(p.acc[0])}" r="5" fill="${col}" stroke="${css('--paper')}" stroke-width="2" data-t="${name} · ${(100 * p.noise).toFixed(0)}% flips<br>${pct(p.acc[0])} held-out sums (n=${p.acc[2]})"/>`);
+      const last = pts[pts.length - 1];
+      s += `<text x="${xs(last.noise) + 10}" y="${ys(last.acc[0]) + 4}" style="fill:${css('--ink')}">${name}</text>`;
+    }
+    el.innerHTML = `<div class="legend"><span><i style="background:${css('--s1')}"></i>no coding</span><span><i style="background:${css('--s2')}"></i>each bit sent 3× (same total bits)</span></div><svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
+    el.querySelector('svg').onmousemove = e => { const d = e.target.dataset && e.target.dataset.t; d ? showTip(e, d) : hideTip(); };
+    el.querySelector('svg').onmouseleave = hideTip;
+    const f = (D.findings || {}).channel; if (f) document.getElementById('channelFinding').innerHTML = `<p class="finding">${f}</p>`;
+  }
+
+  // decipher ------------------------------------------------------------------
+  function drawDecipher() {
+    const el = document.getElementById('decipherCards');
+    if (!D.decipher) return;
+    const mark = b => b ? '<span class="ok">✓</span>' : '<span class="bad">✗</span>';
+    el.innerHTML = '<div class="dec">' + Object.entries(D.decipher).map(([k, r]) => `
+      <div class="card"><b>base ${r.base}, ${r.lsb ? 'LSB' : 'MSB'} first</b>
+      <span class="muted">seed ${r.seed} · ${r.V} symbols</span><br>
+      ${mark(r.role_acc === 1)} digits vs operators<br>
+      ${mark(r.separator_correct)} count separator<br>
+      ${mark(r.succ_exact)} every digit's value<br>
+      ${mark(r.lsb_hat === r.lsb)} digit order<br>
+      ${mark(r.operators_correct['+'])} "+" and "="<br>
+      ${mark(r.operators_correct['*'])} "×"<br>
+      ${mark(r.comparison_correct)} comparison &lt; = &gt;</div>`).join('') + '</div>';
+    const f = (D.findings || {}).decipher; if (f) document.getElementById('decipherFinding').innerHTML = `<p class="finding">${f}</p>`;
+  }
+
+  // evolution -----------------------------------------------------------------
+  function drawEvolve() {
+    const el = document.getElementById('evolveChart');
+    if (!D.evolve) return;
+    const W = 640, H = 220, m = {l: 46, r: 130, t: 12, b: 36};
+    const names = {tf: 'tuned on transformers', lstm: 'tuned on LSTMs', mixed: 'tuned on both'};
+    const cols = {tf: css('--s1'), lstm: css('--s2'), mixed: css('--s3')};
+    const G = Math.max(...Object.values(D.evolve).map(e => e.best_per_gen.length));
+    const xs = g => m.l + (W - m.l - m.r) * g / Math.max(1, G - 1), ys = v => m.t + (H - m.t - m.b) * (1 - v);
+    let s = axes(W, H, m, 1, [0, .5, 1]);
+    for (let g = 0; g < G; g++) s += `<text x="${xs(g)}" y="${H - m.b + 18}" text-anchor="middle">${g}</text>`;
+    s += `<text x="${(m.l + W - m.r) / 2}" y="${H - 2}" text-anchor="middle">generation</text>`;
+    for (const [k, e] of Object.entries(D.evolve)) {
+      s += `<polyline fill="none" stroke="${cols[k]}" stroke-width="2" points="${e.best_per_gen.map((v, g) => `${xs(g)},${ys(v)}`).join(' ')}"/>`;
+      e.best_per_gen.forEach((v, g) => s += `<circle cx="${xs(g)}" cy="${ys(v)}" r="4.5" fill="${cols[k]}" stroke="${css('--paper')}" stroke-width="2" data-t="${names[k]} · generation ${g}<br>best design: ${pct(v)} held-out sums"/>`);
+      const v = e.best_per_gen[e.best_per_gen.length - 1];
+      s += `<text x="${xs(G - 1) + 10}" y="${ys(v) + 4}" style="fill:${css('--ink')}">${names[k]}</text>`;
+    }
+    el.innerHTML = `<div class="legend">${Object.keys(D.evolve).map(k => `<span><i style="background:${cols[k]}"></i>${names[k]}</span>`).join('')}<span>best design per generation</span></div><svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
+    el.querySelector('svg').onmousemove = e => { const d = e.target.dataset && e.target.dataset.t; d ? showTip(e, d) : hideTip(); };
+    el.querySelector('svg').onmouseleave = hideTip;
+    if (D.transfer) {
+      const archs = ['tf-s', 'tf', 'tf-deep', 'lstm-s', 'lstm'];
+      const an = {'tf-s': 'small TF', tf: 'TF', 'tf-deep': 'deep TF', 'lstm-s': 'small LSTM', lstm: 'LSTM'};
+      const cn = {tf: 'champion (transformers)', lstm: 'champion (LSTMs)', mixed: 'champion (both)', 'human-b10': 'human: decimal sums', 'human-b2': 'human: binary + counting'};
+      const ink = css('--ink');
+      let h = `<thead><tr><th>message ↓ · fresh receiver →</th>${archs.map(a => `<th>${an[a]}</th>`).join('')}</tr></thead><tbody>`;
+      for (const [k, r] of Object.entries(D.transfer)) {
+        h += `<tr><th title="${r.label}">${cn[k] || k}</th>` + archs.map(a => { const v = r.scores[a];
+          const bg = v === undefined ? '' : seqColor(v);
+          return v === undefined ? '<td class="na"></td>' : `<td style="background:${bg};color:${textOn(bg)}" data-t="${cn[k] || k}<br>${r.label}<br>${an[a]}: ${pct(v)}">${(100 * v).toFixed(0)}</td>`; }).join('') + '</tr>';
+      }
+      const t = document.getElementById('transferTable');
+      t.innerHTML = `<h3>Champions sent to strangers</h3><div class="scroll"><table class="hm">${h}</tbody></table></div>`;
+      t.onmousemove = e => { const d = e.target.dataset && e.target.dataset.t; d ? showTip(e, d) : hideTip(); };
+      t.onmouseleave = hideTip;
+    }
+    const f = (D.findings || {}).evolve; if (f) document.getElementById('evolveFinding').innerHTML = `<p class="finding">${f}</p>`;
+  }
+})();
+</script>
+<script type="module">
+import { Receiver } from './receiver.js';
+const out = document.getElementById('qaOut');
+const qa = document.getElementById('qa'), qb = document.getElementById('qb'), qop = document.getElementById('qop');
+let R = null, J = null, held = null;
+const wait = () => new Promise(r => { const f = () => window.AZ ? r() : setTimeout(f, 30); f(); });
+await wait();
+const { glyph, meaning, opName } = window.AZ;
+try {
+  J = await (await fetch('receiver.json')).json();
+  R = new Receiver(J);
+  held = new Set(J.heldout_add_pairs.map(([a, b]) => a + ',' + b));
+  out.innerHTML = '<p class="muted">Ready. Pick a question and transmit it.</p>';
+} catch (e) { out.innerHTML = '<p class="pending">Could not load the receiver.</p>'; }
+const id = s => J.vocab.indexOf(s);
+const num = n => String(n).split('').reverse().map(c => id('d' + c));      // LSB first
+const g1 = t => { const s = J.vocab[t]; return `<span class="g${opName(s) ? ' op' : ''}">${glyph(s)}<span>${meaning(s)}</span></span>`; };
+const decode = ids => { const ds = ids.map(t => J.vocab[t]); if (!ds.length || ds.some(s => !s.startsWith('d'))) return null; return Number(ds.map(s => s.slice(1)).reverse().join('')); };
+const tick = () => new Promise(r => setTimeout(r, 0));
+async function ask(a, op, b) {
+  if (!R) return;
+  a = Math.max(0, Math.min(99, a | 0)); b = Math.max(0, Math.min(99, b | 0));
+  let q, truth, kind;
+  if (op === ',') { q = [...num(a), id(',')]; truth = a + 1; kind = 'count'; }
+  else {
+    q = [...num(a), id(op), ...num(b), id('=')]; kind = op;
+    truth = op === '+' ? a + b : op === '*' ? a * b : (a < b ? '<' : a > b ? '>' : '=');
+  }
+  const shown = op === ',' ? `${a}, …` : `${a} ${op === '*' ? '×' : op === '?' ? 'vs' : op} ${b}`;
+  out.innerHTML = `<div class="qa-line"><span class="lbl">you transmit · ${shown}</span>${q.map(g1).join('')}</div><div class="qa-line" id="ans"><span class="lbl">it answers</span></div><div id="verdict"></div>`;
+  const ans = document.getElementById('ans');
+  const seq = [...J.context, ...q], got = [];
+  for (let k = 0; k < 7; k++) {
+    await tick();
+    const lg = R.forward(seq);
+    let best = 0; for (let i = 1; i < lg.length; i++) if (lg[i] > lg[best]) best = i;
+    let z = 0; for (const v of lg) z += Math.exp(v - lg[best]);
+    const s = J.vocab[best];
+    if (kind !== '?' && !s.startsWith('d')) break;
+    got.push(best); seq.push(best);
+    ans.insertAdjacentHTML('beforeend', `<span class="g${opName(s) ? ' op' : ''}">${glyph(s)}<span>${meaning(s)}</span><span class="conf" title="confidence ${(100 / z).toFixed(0)}%"><i style="width:${100 / z}%"></i></span></span>`);
+    if (kind === '?') break;
+  }
+  const said = kind === '?' ? (got.length ? meaning(J.vocab[got[0]]) : null) : decode(got);
+  const ok = said === truth;
+  let badge = '';
+  if (kind === '+') {
+    const p = Math.min(a, b) + ',' + Math.max(a, b);
+    badge = (a > 63 || b > 63) ? '<span class="badge">bigger than any sum it heard</span>'
+      : held.has(p) ? '<span class="badge">this pair was never in the message</span>'
+      : '<span class="badge">this pair was in the message</span>';
+  }
+  if (kind === '*' && (a > 15 || b > 15)) badge = '<span class="badge">it only heard products up to 15 × 15</span>';
+  const word = kind === '?' ? ({'<': 'less than', '>': 'greater than', '=': 'equal'}[said] || said) : said;
+  document.getElementById('verdict').innerHTML =
+    `<div class="verdict">${said === null ? 'No readable answer' : 'It says <b>' + word + '</b>'} · <span class="${ok ? 'ok' : 'bad'}">${ok ? 'correct' : 'wrong (truth: ' + truth + ')'}</span>${badge}</div>` +
+    `<p class="muted" style="margin-top:6px;font-size:12px">The bar under each symbol is the receiver's confidence in it. Numbers are written least-significant digit first, as in the transmission.</p>`;
+}
+document.getElementById('askBtn').onclick = () => ask(+qa.value, qop.value, +qb.value);
+document.getElementById('rndBtn').onclick = () => {
+  const ps = J.heldout_add_pairs, [x, y] = ps[Math.floor(Math.random() * ps.length)];
+  const [a, b] = Math.random() < .5 ? [x, y] : [y, x];
+  qa.value = a; qb.value = b; qop.value = '+'; qb.disabled = false; ask(a, '+', b);
+};
+qop.onchange = () => { qb.disabled = qop.value === ','; };
+if (R) document.getElementById('rndBtn').click();
+
+</script>
+</body>
+</html>
