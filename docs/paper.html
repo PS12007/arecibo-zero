@@ -47,7 +47,15 @@
 <a href="https://github.com/PS12007/arecibo-zero">github.com/PS12007/arecibo-zero</a> ·
 <a href="https://ps12007.github.io/arecibo-zero/">interactive demo</a></p>
 
-<div class="abstract"><b>Abstract.</b> ABSTRACT</div>
+<div class="abstract"><b>Abstract.</b> We test interstellar message designs empirically. A sender writes arithmetic (sums, products, comparisons, counting) under a fixed bit budget, choosing the
+number system and digit order. The receiver is a randomly initialised transformer or LSTM trained only on that message to predict the next symbol, and it is examined on sums
+whose operand pairs never appear in the message. Across about 300 receivers trained on one laptop GPU: (1) writing the least-significant digit first beats the human order in every
+base, cutting the bits needed for 50% held-out accuracy by 1.4–4×. Base 4 needs the fewest (about 16k bits), and binary written as in the Arecibo message never reaches 50%
+within 131k bits. (2) The best numerals depend on the receiver: LSTMs answer 83% of unseen sums after hearing just 41 sums in unary, where every positional system leaves
+them at chance. (3) At a fixed budget, accuracy on sums is predicted by the number of sums alone. Counting gives no head start, and products, which share the sums' form, cost
+8–11 points. (4) Delivered as raw bits without symbol boundaries, the same content teaches nothing (about 1% against 91%): framing is the hardest part of the message.
+(5) Reversing roles, we recover the complete key of 5 of 12 symbol-shuffled messages (base, digit values, digit order, +, × and the comparison) by questioning a trained receiver.
+A genetic search over designs independently converges on base 4, least-significant digit first.</div>
 
 <h2>1 · Introduction</h2>
 <p>In 1974 the Arecibo radio telescope sent 1,679 bits towards the globular cluster M13. The message opens with the numbers one to ten
@@ -89,8 +97,8 @@ symbols: plus, times, equals, a comparison sign, less, greater, a list separator
 <p>Statements are sampled independently from the mix until the bit budget is used up. A symbol costs log<sub>2</sub>|V| bits, so a
 budget buys fewer symbols when the alphabet is larger, and every design pays the same total. Unary writes <i>n</i> as <i>n</i> copies of one
 digit and zero as nothing at all, so <code>0 + 3 = 3</code> becomes <code>+ 111 = 111</code>. A stretch of a base-10, LSB-first message with every
-statement kind looks like this (shown in human symbols; the receiver sees only opaque token ids):</p>
-<span class="tape">SAMPLE</span>
+statement kind looks like this (shown in human symbols, digits least-significant first, so "13 + 63 = 76" means 31 + 36 = 67; the receiver sees only opaque token ids):</p>
+<span class="tape">13 + 63 = 76 ; 82, 92, 03, 13, 23, 33 ; 52 + 0 = 52 ; 31 + 71 = 03 ; 71 + 43 = 15 ; 5 + 55 = 06 ; 84 ? 16 = &lt; ; 94 + 36 = 211 ; 54 + 33 = 87 ; 51 × 4 = 06 ; 64 + 94 = 59 ; 25 + 85 …</span>
 <h3>2.2 Receivers</h3>
 <p>The main receiver is a 2-layer, 4-head transformer with width 128 (pre-LayerNorm, GELU MLP, learned positions; 0.42M parameters)
 with a 128-symbol context, or 256 for unary, whose numerals are long. The second is a 2-layer LSTM with 256 units. The design search also
@@ -175,7 +183,21 @@ but they do not transfer to its neighbours. A sender with a fixed budget should 
 bits cost, and a lookalike idea costs a little more. LSTMs are worse across the board at 2<sup>15</sup> bits (18% with sums only), and every addition lowers them further.</p>
 
 <h2>5 · Raw bits through a noisy channel</h2>
-CHANNEL
+<p>So far the receiver has been handed clean symbols. A radio receiver gets a stream of bits instead, with no marks between symbols and some bits
+flipped. Here every symbol of a base-10, LSB-first, sums-only design gets a random 5-bit codeword. The receiver sees only the concatenated bits
+and is never told the width. Each bit is flipped with probability 0, 1, 3 or 10%. The sender may also send every bit three times, which cuts the
+number of sums to a third, since repeats count against the same 2<sup>16</sup>-bit budget. Receivers are the same transformers with a 512-bit context,
+which covers about 11 statements. Questions are asked in clean bits, and answers are decoded with the sender's codebook.</p>
+<figure class="half"><img src="fig/channel.png" alt="Held-out accuracy over a raw bit channel"><figcaption><b>Figure 3.</b> Held-out sum accuracy
+for receivers trained on raw bits (two seeds per point). Every condition is at the floor.</figcaption></figure>
+<p><b>No receiver learned to add from raw bits</b>, not even with no noise and no repetition (Figure 3). They answer 0–2% of held-out sums and about 1% of
+sums that <i>were</i> in the message. The same content as symbols gives 91%. The receivers did learn something: training loss fell to 0.35 nats per
+bit, about 1.75 nats per symbol, which captures the framing and the frequent patterns. But it is well above what the sums-only symbol receivers reach,
+so the arithmetic was never found. With every condition at the floor, the comparison between noise levels and repetition coding cannot be made.
+A follow-up with four times the training (32,000 steps, clean channel) is queued and will be added to the repository.</p>
+<p>For message design this is the sharpest result in the report. The receivers that learn arithmetic from 2<sup>14</sup> symbol-level bits learn
+nothing from 2<sup>16</sup> raw bits. Finding the symbols is harder than the mathematics. The Arecibo message handles framing by its length,
+1,679 = 23 × 73, a product of two primes, which suggests a rectangle. Our results suggest that framing deserves more of the budget than any other design choice.</p>
 
 <h2>6 · Reading the message back out of the receiver</h2>
 <p>The previous sections take the sender's view. This one takes the view of someone who intercepts a message, or of a sender who wants to check
@@ -225,13 +247,47 @@ is necessary for decipherment but, with this probe, not sufficient. For a sender
 or base 10 written LSB first, can also be read back reliably.</p>
 
 <h2>7 · Evolving the message, and whether it travels</h2>
-EVOLVE
+<p>Finally we let the message design itself. A genome is a base (2–16), a digit order and weights for the four statement kinds. A population of 8
+designs is scored by the mean held-out sum accuracy of two transformer receivers at 2<sup>14</sup> bits. The best 3 survive each generation, and 5 mutants
+replace the rest. The starting population contains two human designs, decimal sums as humans write them and Arecibo-style binary with counting, plus six random ones.</p>
+<p><b>The search rediscovered the main result on its own.</b> After four generations every one of the top six designs is base 4, written least-significant
+digit first. The best scores 44%, against 18% for the human decimal design and 5% for Arecibo-style binary. The champion keeps some counting (23% of statements).
+But it does not beat the simple sums-only base-4 LSB message from §3, which scored 51% at the same budget, so with two receivers per evaluation the extra counting is
+within noise rather than a discovery. Designs that add products, or that write numbers MSB first, are eliminated early.</p>
+<p class="box">Status: the same search run against LSTM receivers, and the transfer test that sends each champion to five kinds of fresh receivers
+(small, standard and deep transformers; small and standard LSTMs), were still running when this version of the report was written. They will be added to
+the repository and the demo page. §3 predicts the outcome: an LSTM-tuned search should drift towards unary, which the receivers in this search could not choose.</p>
 
 <h2>8 · Things that did not work, and caveats</h2>
-CAVEATS
+<ul>
+<li><b>Reading values from the receiver's geometry did not work reliably.</b> The first plan was to recover digit values from the first principal component
+of the hidden state at the end of each numeral, the receiver's "number line". Its rank correlation with the true digit values ranged from −1.0 to 0.64
+across the twelve receivers. That is informative about digit order in some cases and useless in others. The counting probe replaced it, and geometry is kept only as
+a fallback for digit order.</li>
+<li><b>Simple role heuristics failed.</b> Separating digits from operators by symbol entropy or frequency did not work. Using self-repetition alone wrongly
+called "=" a digit, because comparisons produce "= =", and missed rare base-16 digits. The seed-and-correlate rule in §6 fixes the first problem but not the second.</li>
+<li><b>Seed variance is large near the threshold.</b> The two LSB-first binary receivers at 2<sup>16</sup> bits scored 53% and 94%. Delayed generalisation
+makes the point where a receiver "gets it" sensitive to the seed, so thresholds in Table 1 are rough to within a factor of about 1.5.</li>
+<li><b>The batched trainer was cross-checked only near the floor.</b> At 2<sup>13</sup> bits single and batched receivers agree on average (mean difference 0.2 points,
+<i>r</i> = 0.87 across ten designs), but there both are near chance. A pilot at 2<sup>16</sup> bits (base 10 LSB) gave 90–93% single against 94% batched.</li>
+<li><b>One evolve stage stalled.</b> During a period of low system memory the first evolve run made no progress for five hours with the GPU fully busy. The same jobs
+then ran at the normal speed when restarted. No results were lost. The stall looks like a driver or paging problem, not the code.</li>
+<li><b>The exam is not cold.</b> Each question follows about 64 symbols of real message, so the receiver is "in context". A receiver asked a bare question with
+no preceding message may do worse. This is the natural setting for a receiver that has just heard the transmission.</li>
+</ul>
 
 <h2>9 · Limitations</h2>
-LIMITS
+<p><b>Neural networks are not aliens.</b> Two architecture families trained by gradient descent are a narrow sample of possible minds, and §3 already shows that
+the best design changes between them. The conclusions are best read as "this design is robust (or fragile) across the minds we could test", not as
+predictions about any real receiver. A design that fails here relies on priors that a learner without them cannot recover from this many bits.
+That is worth knowing, whoever the receiver is.</p>
+<p><b>Arithmetic only.</b> Real messages also carry pictures (the Arecibo raster), physics and chemistry. Numbers come first in every proposal, and they are
+the easiest to examine with held-out questions, so we start there. The number range is small (sums below 128, products below 256).</p>
+<p><b>Budgets.</b> Even the best design needs about 16,000 bits to reach 50% on held-out sums, and nothing learned anything at 8,192. The 1,679 bits of the
+Arecibo message would teach these receivers nothing about arithmetic. A patient receiver that re-reads a short message forever might do better than our fixed
+8,000 training steps suggest. We did not test that, and it would change the trade-offs between length and repetition.</p>
+<p><b>Small searches.</b> The design search (§7) cannot choose unary and uses populations of 8 over 4 generations, two receivers per evaluation and the smallest budget. It can find a good
+region but not the best design.</p>
 
 <h2>10 · Related work</h2>
 <p><b>Message design.</b> The Arecibo message [1], Lincos [2], the Cosmic Call messages [3] and many other proposals [5, 6] all teach
@@ -247,8 +303,13 @@ Work on emergent communication studies codes that neural agents <i>invent</i> [1
 learner whose internals we then probe to recover it.</p>
 
 <h2>11 · Conclusion</h2>
-CONCLUSION
-
+<p>Treating message design as an experiment, with untrained minds as receivers and held-out questions as the test of understanding, gives clear and
+sometimes surprising answers. Write the least-significant digit first: it wins in every base, by up to a factor of four in bits. Use a small but not tiny base:
+base 4 beats both decimal and the binary of the Arecibo message, which these receivers can barely learn. Do not expect one design to suit every mind: tally marks
+are mediocre for transformers and by far the best for LSTMs. Spend bits on the idea you want understood, because counting and other neighbouring ideas do not transfer.
+Most of all, solve framing first: with symbol boundaries removed, the same receivers learned nothing from four times the bits. The receivers can also be turned around.
+A network that has understood a message can be questioned until it gives the message's key back, and this worked completely for five of twelve shuffled designs.
+The trained receiver on the demo page answers sums that were never transmitted to it. That is, in a small way, what a first contact message is supposed to achieve.</p>
 <h2>References</h2>
 <ol class="refs">
 <li>The Staff at the National Astronomy and Ionosphere Center. The Arecibo message of November, 1974. <i>Icarus</i> 26(4):462–466, 1975.</li>
