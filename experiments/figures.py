@@ -30,7 +30,7 @@ def radix_label(base, lsb):
 def mean_table(recs, arch, metric="add_heldout"):
     t = defaultdict(list)
     for r in recs:
-        if r["arch"] != arch:
+        if r["arch"] != arch or (arch == "tf" and r.get("tag") != "ens"):
             continue
         d = r["design"]
         t[(d["base"], d["lsb_first"], r["budget"])].append(r["scores"][metric])
@@ -68,7 +68,7 @@ def fig_radix():
     fig, axes = plt.subplots(1, 2, figsize=(10, 4.6), gridspec_kw={"width_ratios": [5, 2]})
     im = heat(axes[0], rows, budgets, tab, "Transformer receivers (mean of 2 seeds)")
     tab_l, _ = mean_table(recs, "lstm")
-    lb = sorted({r["budget"] for r in recs if r["arch"] == "lstm"})
+    lb = [2**14, 2**16]
     heat(axes[1], rows, lb, tab_l, "LSTM receivers")
     axes[1].set_yticklabels([])
     cb = fig.colorbar(im, ax=axes, shrink=0.8, pad=0.02)
@@ -80,6 +80,87 @@ def fig_radix():
     plt.close(fig)
 
 
+def style(ax):
+    ax.grid(axis="y", color=GRID, lw=0.6)
+    ax.set_axisbelow(True)
+    ax.tick_params(length=0)
+
+
+def fig_content():
+    recs = [r for r in load(f"{ROOT}/results/content.jsonl") if r["arch"] == "tf"]
+    if not recs:
+        return
+    names = ["add", "add+count", "add+cmp", "add+mul", "all"]
+    budgets = sorted({r["budget"] for r in recs})
+    fig, ax = plt.subplots(figsize=(7, 3.4))
+    w = 0.8 / len(budgets)
+    for j, B in enumerate(budgets):
+        for i, n in enumerate(names):
+            v = [r["scores"]["add_heldout"] for r in recs if r["design"]["name"] == n and r["budget"] == B]
+            if not v:
+                continue
+            x = i + (j - (len(budgets) - 1) / 2) * w
+            ax.bar(x, np.mean(v), w * 0.9, color=SERIES[0], alpha=0.35 + 0.65 * j / max(1, len(budgets) - 1),
+                   label=f"$2^{{{int(np.log2(B))}}}$ bits" if i == 0 else None)
+            ax.plot([x] * len(v), v, "o", ms=2.5, color=INK, alpha=0.6)
+    ax.set_xticks(range(len(names)), ["sums only", "+ counting", "+ comparisons", "+ products", "everything"])
+    ax.set_ylim(0, 1)
+    ax.set_ylabel("held-out sums correct")
+    ax.legend(frameon=False, fontsize=8, ncol=3, loc="upper left")
+    ax.set_title("Same bit budget, different curriculum (base 10, LSB first, transformer)", loc="left", color=INK)
+    style(ax)
+    fig.savefig(f"{FIG}/content.png")
+    plt.close(fig)
+
+
+def fig_channel():
+    recs = load(f"{ROOT}/results/channel.jsonl")
+    if not recs:
+        return
+    fig, ax = plt.subplots(figsize=(5.5, 3.4))
+    for c, rep in zip(SERIES, (1, 3)):
+        ns = sorted({r["noise"] for r in recs if r["rep"] == rep})
+        m = [np.mean([r["scores"]["add_heldout"] for r in recs if r["rep"] == rep and r["noise"] == n]) for n in ns]
+        ax.plot(ns, m, "-o", color=c, lw=2, ms=5, label="no repetition" if rep == 1 else "each bit sent 3x")
+    ax.set_xlabel("bit-flip probability")
+    ax.set_ylabel("held-out sums correct")
+    ax.set_ylim(0, 1)
+    ax.legend(frameon=False, fontsize=8)
+    ax.set_title("Raw noisy bits, fixed total budget ($2^{16}$ bits)", loc="left", color=INK)
+    style(ax)
+    fig.savefig(f"{FIG}/channel.png")
+    plt.close(fig)
+
+
+def fig_evolve():
+    fig, ax = plt.subplots(figsize=(5.5, 3.4))
+    any_ = False
+    for c, name in zip(SERIES, ("tf", "lstm", "mixed")):
+        p = f"{ROOT}/results/evolve_{name}.json"
+        if not os.path.exists(p):
+            continue
+        any_ = True
+        h = json.load(open(p))["history"]
+        best = [g[0]["fitness"] for g in h]
+        med = [float(np.median([x["fitness"] for x in g])) for g in h]
+        ax.plot(range(len(h)), best, "-o", color=c, lw=2, ms=5, label=f"{name} receivers: best")
+        ax.plot(range(len(h)), med, "--", color=c, lw=1.2, alpha=0.7, label="median")
+    if not any_:
+        plt.close(fig)
+        return
+    ax.set_xlabel("generation")
+    ax.set_ylabel("held-out sums correct")
+    ax.set_ylim(0, 1)
+    ax.legend(frameon=False, fontsize=8)
+    ax.set_title("Evolving the message ($2^{14}$ bits)", loc="left", color=INK)
+    style(ax)
+    fig.savefig(f"{FIG}/evolve.png")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_radix()
+    fig_content()
+    fig_channel()
+    fig_evolve()
     print("figures ->", FIG)

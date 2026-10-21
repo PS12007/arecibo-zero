@@ -42,6 +42,8 @@ if recs:
     for r in recs:
         if r["arch"] == "tf" and r.get("tag") != "ens":
             continue  # earlier single-model runs: kept only as an engine cross-check
+        if r["arch"] == "lstm" and r["budget"] not in (2**14, 2**16):
+            continue  # early smoke tests
         dd = r["design"]
         t[(r["arch"], dd["base"], dd["lsb_first"], r["budget"])].append(r["scores"]["add_heldout"])
     out["radix"] = [{"arch": a, "base": b, "lsb": l, "budget": B, "acc": mean_sd(v)}
