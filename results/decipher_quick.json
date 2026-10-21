@@ -1,0 +1,75 @@
+{
+ "b10-lsb-s0": {
+  "base": 10,
+  "lsb": 1,
+  "seed": 0,
+  "loss": NaN,
+  "V": 18,
+  "role_acc": 1.0,
+  "n_digits_found": 10,
+  "value_order_true": [
+   1,
+   3,
+   2,
+   8,
+   5,
+   4,
+   7,
+   6,
+   9,
+   0
+  ],
+  "value_exact": false,
+  "value_spearman": 0.29696969696969694,
+  "succ_chain_values": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "succ_agreement": 9,
+  "succ_exact": true,
+  "succ_frac": 1.0,
+  "separator_correct": true,
+  "lsb_from_counting": 1,
+  "lsb_from_geometry": 1,
+  "order_fit": {
+   "0": 0.23458296812730467,
+   "1": 0.4532263606451767
+  },
+  "lsb_hat": 1,
+  "lsb_correct": true,
+  "operators": {
+   "+": {
+    "op": 6,
+    "eq": 4,
+    "truth_rate": 1.0
+   },
+   "*": {
+    "op": 5,
+    "eq": 4,
+    "truth_rate": 1.0
+   }
+  },
+  "operators_correct": {
+   "+": true,
+   "*": true
+  },
+  "comparison": {
+   "op": 12,
+   "map": {
+    "-1": 8,
+    "0": 4,
+    "1": 16
+   },
+   "consistency": 1.0
+  },
+  "comparison_correct": true
+ }
+}
