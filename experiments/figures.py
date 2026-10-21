@@ -106,7 +106,7 @@ def fig_content():
     ax.set_xticks(range(len(names)), ["sums only", "+ counting", "+ comparisons", "+ products", "everything"])
     ax.set_ylim(0, 1)
     ax.set_ylabel("held-out sums correct")
-    ax.legend(frameon=False, fontsize=8, ncol=3, loc="upper left")
+    ax.legend(frameon=False, fontsize=8, ncol=3, loc="upper right")
     ax.set_title("Same bit budget, different curriculum (base 10, LSB first, transformer)", loc="left", color=INK)
     style(ax)
     fig.savefig(f"{FIG}/content.png")
@@ -114,7 +114,7 @@ def fig_content():
 
 
 def fig_channel():
-    recs = load(f"{ROOT}/results/channel.jsonl")
+    recs = [r for r in load(f"{ROOT}/results/channel.jsonl") if r.get("steps", 8000) == 8000]
     if not recs:
         return
     fig, ax = plt.subplots(figsize=(5.5, 3.4))

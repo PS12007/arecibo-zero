@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arecibo Zero: technical report</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #16140f; --soft: #5a5246; --rule: #c9bc9f; --accent: #b4381f; }
+  @page { size: Letter; margin: 0.8in 0.85in; }
+  html { background: #fff; }
+  body { font-family: "Newsreader", Georgia, serif; color: var(--ink); font-size: 11pt; line-height: 1.45; max-width: 7in; margin: 0 auto; padding: 32px 16px; background: #fff; }
+  h1 { font-family: Fraunces, Georgia, serif; font-size: 21pt; line-height: 1.15; margin: 0 0 6px; font-weight: 600; letter-spacing: -.01em; }
+  .sub { font-size: 12.5pt; color: var(--soft); margin: 0 0 10px; font-style: italic; }
+  .meta { font-family: "IBM Plex Mono", monospace; font-size: 8.5pt; color: var(--soft); margin-bottom: 18px; }
+  .meta a { color: var(--accent); }
+  .abstract { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 10px 0; margin: 0 0 18px; font-size: 10.5pt; }
+  .abstract b { font-variant: small-caps; letter-spacing: .04em; }
+  h2 { font-family: Fraunces, Georgia, serif; font-size: 13pt; margin: 20px 0 6px; font-weight: 600; break-after: avoid; }
+  h3 { font-size: 11pt; margin: 14px 0 4px; font-weight: 600; font-style: italic; break-after: avoid; }
+  p, li { text-align: justify; hyphens: auto; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 0 0 8px; padding-left: 20px; }
+  figure { margin: 12px 0 14px; break-inside: avoid; }
+  figure img { width: 100%; display: block; }
+  figure.half img { width: 72%; margin: 0 auto; }
+  figcaption { font-size: 9.2pt; color: var(--soft); margin-top: 5px; line-height: 1.35; }
+  figcaption b { color: var(--ink); }
+  table { border-collapse: collapse; width: 100%; font-size: 9.2pt; margin: 8px 0 12px; break-inside: avoid; }
+  th, td { border-bottom: 1px solid var(--rule); padding: 3px 6px; text-align: left; }
+  th { border-bottom: 1px solid var(--ink); font-weight: 600; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  caption { caption-side: top; text-align: left; font-size: 9.2pt; color: var(--soft); padding-bottom: 4px; }
+  caption b { color: var(--ink); }
+  code, .tape { font-family: "IBM Plex Mono", monospace; font-size: 9pt; }
+  .tape { display: block; background: #f6f3ea; border: 1px solid var(--rule); padding: 6px 9px; margin: 6px 0 10px; white-space: pre-wrap; word-break: break-all; }
+  ol.refs { font-size: 9pt; padding-left: 18px; }
+  ol.refs li { margin-bottom: 3px; text-align: left; }
+  .box { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 10px 0 12px; }
+</style>
+</head>
+<body>
+
+<h1>Arecibo Zero: testing interstellar message designs on minds that start from nothing</h1>
+<p class="sub">Randomly initialised neural networks stand in for the receiver of a first-contact message. They learn arithmetic from the transmission alone, are examined on sums the message never contained, and are then taken apart to read the message back.</p>
+<p class="meta">PS12007 · technical report · October 2026 ·
+<a href="https://github.com/PS12007/arecibo-zero">github.com/PS12007/arecibo-zero</a> ·
+<a href="https://ps12007.github.io/arecibo-zero/">interactive demo</a></p>
+
+<div class="abstract"><b>Abstract.</b> ABSTRACT</div>
+
+<h2>1 · Introduction</h2>
+<p>In 1974 the Arecibo radio telescope sent 1,679 bits towards the globular cluster M13. The message opens with the numbers one to ten
+written in binary, on the assumption that counting is the first thing any technological species would recognise [1]. Later designs
+went further: Freudenthal's <i>Lincos</i> builds a whole language up from arithmetic statements [2], and the Cosmic Call transmissions
+of 1999 and 2003 begin with pages of numerals, sums and equalities [3]. Every such message rests on guesses about the receiver: that it
+will find the symbols, spot the base and digit order, and work out what the operator signs mean. None of these guesses has been tested,
+because there has never been a receiver to test them on.</p>
+<p>This report uses the nearest thing available: a mind that starts with no knowledge at all. A small neural network, randomly
+initialised, is trained on one transmission and nothing else, purely to predict the next symbol. It is never told what the symbols
+are, where statements begin, or that the message is about numbers. Then it is examined on <b>sums that the message never contained</b>:
+a quarter of all operand pairs below 64 are withheld from every design, in both orders. A receiver can answer them only by having
+extracted the rule of addition from the examples it heard. That turns message design into an experiment: hold the bit budget and
+the mathematics fixed, change how the message is written, and count how many receivers understand it.</p>
+<p>Neural networks are not aliens, and §9 discusses what this proxy can and cannot say. They are, though, the only general learners
+we can build that have no prior notion of number, and they are a useful adversary: a design that only works if the receiver already
+thinks like us will fail on them. We ask five questions:</p>
+<ol>
+<li><b>Numerals.</b> Which way of writing numbers (unary tallies; bases 2, 3, 4, 6, 10, 16; most- or least-significant digit first) is understood with the fewest bits?</li>
+<li><b>Curriculum.</b> At a fixed budget, does spending bits on counting, comparisons or products help a receiver learn addition, or just dilute it?</li>
+<li><b>Channel.</b> If the receiver gets only raw, noisy bits, with no symbol boundaries, is repetition coding worth its cost?</li>
+<li><b>Decipherment.</b> Can we read the message back <i>out of</i> a trained receiver (which symbols are digits, the base, the digit order, and which signs mean plus, times and less-than) without looking at the message's key?</li>
+<li><b>Design search.</b> If the message is evolved to suit one kind of receiver, does it still work for another?</li>
+</ol>
+<p>Everything runs on one 8&nbsp;GB laptop GPU in about ten hours. No data is downloaded: the messages are generated. One trained
+receiver runs in the browser on the demo page, and visitors can ask it sums it has never heard.</p>
+
+<h2>2 · Setup</h2>
+<h3>2.1 The message</h3>
+<p>A <i>design</i> fixes a radix <i>b</i> ∈ {1, 2, 3, 4, 6, 10, 16} (where 1 means unary tallies), a digit order (most-significant first, as
+humans write, or least-significant first), and a <i>mix</i> of statement kinds. The vocabulary is the <i>b</i> digits plus eight operator
+symbols: plus, times, equals, a comparison sign, less, greater, a list separator and a statement terminator. There are four kinds of statement:</p>
+<ul>
+<li><b>sum</b> <code>a + b = c ;</code> with <i>a</i>, <i>b</i> &lt; 64, drawn only from the 75% of unordered pairs that are not held out;</li>
+<li><b>product</b> <code>a × b = c ;</code> with <i>a</i>, <i>b</i> &lt; 16;</li>
+<li><b>comparison</b> <code>a ? b = R ;</code> where <i>R</i> is one of the less, greater or equals symbols;</li>
+<li><b>counting</b> <code>n , n+1 , … , n+5 ;</code> with <i>n</i> &lt; 122.</li>
+</ul>
+<p>Statements are sampled independently from the mix until the bit budget is used up. A symbol costs log<sub>2</sub>|V| bits, so a
+budget buys fewer symbols when the alphabet is larger, and every design pays the same total. Unary writes <i>n</i> as <i>n</i> copies of one
+digit and zero as nothing at all, so <code>0 + 3 = 3</code> becomes <code>+ 111 = 111</code>. A stretch of a base-10, LSB-first message with every
+statement kind looks like this (shown in human symbols; the receiver sees only opaque token ids):</p>
+<span class="tape">SAMPLE</span>
+<h3>2.2 Receivers</h3>
+<p>The main receiver is a 2-layer, 4-head transformer with width 128 (pre-LayerNorm, GELU MLP, learned positions; 0.42M parameters)
+with a 128-symbol context, or 256 for unary, whose numerals are long. The second is a 2-layer LSTM with 256 units. The design search also
+uses a narrower transformer (width 64), a 4-layer transformer and a 1-layer, 128-unit LSTM. Every receiver is trained from scratch on random
+windows of its one message for 8,000 steps (batch 64, AdamW, learning rate 10<sup>−3</sup> with warm-up and cosine decay, weight decay 0.1),
+long enough to see each symbol of the largest messages about 30 times. Long training matters. Like the small algorithmic tasks where
+"grokking" was first seen [4], a base-2 receiver can sit at chance on held-out sums for thousands of steps and then generalise: one pilot
+went from 3% at 2,000 steps to 93% at 8,000. To make the sweeps affordable, up to ten transformers with different messages and seeds are
+trained at once as one batched model with stacked weights and per-member gradient clipping. This is mathematically the same as training
+them separately, and it gave 1.3–2× more throughput on this GPU.</p>
+<h3>2.3 The exam</h3>
+<p>To ask a question, we show the receiver a real stretch of its message ending at a statement terminator, then the question in its own
+symbols, for example <code>a + b =</code>, and let it continue greedily. The answer is correct only if every digit is right and the next symbol is not
+a digit. The main metric, <b>held-out accuracy</b>, uses up to 400 of the 504 held-out unordered pairs, each in a random order. A receiver
+that has memorised the message scores zero. We also report accuracy on pairs the message did contain, on all 256 products below 16 × 16,
+and on comparisons. Chance is far below 1% for sums. Nothing about the exam is shown to the receiver during training.</p>
+
+<h2>3 · How should numbers be written?</h2>
+<figure><img src="fig/radix.png" alt="Held-out accuracy by number system and message length"><figcaption><b>Figure 1.</b> Held-out sum accuracy (%)
+by numeral system and message length, for transformer receivers (left, mean of two seeds) and LSTM receivers (right, one seed). Every message
+contains only sums. Each cell is a separately trained receiver, or two.</figcaption></figure>
+<p>Figure 1 and Table 1 show the main sweep: 13 numeral systems × 5 message lengths × 2 seeds for transformers (130 receivers), and
+2 lengths × 1 seed for LSTMs (26 receivers). Every message contains only sums. Three results stand out.</p>
+<p><b>Least-significant digit first wins in every base.</b> At 2<sup>15</sup> bits a base-4 message written LSB first gets 87% of
+held-out sums right and the MSB-first version 27%. The same gap is 66% against 13% for base 3, 72% against 37% for base 16, and 84% against 64% for
+base 10. In bits needed to reach 50% held-out accuracy (Table 1), MSB-first costs 1.4× (base 10) to 4× (base 4) more. The reason is plausibly the
+receiver's own constraint, not the arithmetic: it writes the answer one symbol at a time, left to right. Written LSB first, each digit of
+the sum depends only on digits already seen and one carry. Written MSB first, the first digit of the answer depends on a carry chain that has not been
+"computed" yet. This matches what is known for transformers trained on addition [8, 9], but here no one told the receiver what the task was.
+A human sender would write numbers the way humans do. For this kind of receiver that choice roughly doubles or triples the cost of being understood.</p>
+<p><b>Binary, the Arecibo choice, is the worst positional system.</b> MSB-first binary never reaches 50% within 2<sup>17</sup> bits (39% and 28% at the two longest
+lengths, with a large seed spread). LSB-first binary needs about 50k bits, three times as many as LSB-first base 4. Binary numerals are long, so each sum has more
+digits and more carries, and the context holds fewer examples. Small bases are not bad in themselves, though: base 4 is the best system overall,
+ahead of base 10 (16k against 19k bits). The optimum is in the middle: few enough symbols that each digit's role is learned quickly, and short enough numerals
+that carries are rare.</p>
+<p><b>The best numeral depends on the mind.</b> Unary tallies are mid-table for transformers, with a 22k-bit threshold and a plateau near 80%. For LSTMs they are
+in a class of their own. With 2<sup>14</sup> bits, an LSTM given unary sums answers 83% of held-out questions, while every positional system is at 7% or below.
+That message holds just <b>41 sums</b>, covering about 3% of the allowed pairs. Unary addition is concatenation, and a recurrent network can do it with
+one counter that goes up during the operands and down during the answer. The same counter solves no positional system. At 2<sup>16</sup> bits the LSTM's
+positional results are still at most 54% (base 10, LSB first, again ahead of MSB at 26%). A sender who designed for transformers would pick base 4, LSB first.
+One who designed for LSTMs would pick tally marks, the oldest numerals humans have. Neither design is best for both, and §7 returns to this.</p>
+<table>
+<caption><b>Table 1.</b> Transformer receivers: message length (bits) at which held-out accuracy first reaches 50% (log-interpolated between the
+lengths tried), and accuracy at 2<sup>15</sup> and 2<sup>17</sup> bits. Mean of two seeds.</caption>
+<tr><th>numerals</th><th class="n">bits to 50%</th><th class="n">2<sup>15</sup> bits</th><th class="n">2<sup>17</sup> bits</th><th>numerals</th><th class="n">bits to 50%</th><th class="n">2<sup>15</sup> bits</th><th class="n">2<sup>17</sup> bits</th></tr>
+<tr><td>base 4, LSB first</td><td class="n"><b>16k</b></td><td class="n"><b>87%</b></td><td class="n">98%</td><td>base 10</td><td class="n">27k</td><td class="n">64%</td><td class="n">89%</td></tr>
+<tr><td>base 10, LSB first</td><td class="n">19k</td><td class="n">84%</td><td class="n">96%</td><td>base 16</td><td class="n">41k</td><td class="n">37%</td><td class="n">87%</td></tr>
+<tr><td>unary</td><td class="n">22k</td><td class="n">62%</td><td class="n">80%</td><td>base 6</td><td class="n">54k</td><td class="n">35%</td><td class="n">74%</td></tr>
+<tr><td>base 16, LSB first</td><td class="n">25k</td><td class="n">72%</td><td class="n">95%</td><td>base 4</td><td class="n">64k</td><td class="n">27%</td><td class="n">68%</td></tr>
+<tr><td>base 3, LSB first</td><td class="n">26k</td><td class="n">66%</td><td class="n"><b>99%</b></td><td>base 3</td><td class="n">89k</td><td class="n">13%</td><td class="n">64%</td></tr>
+<tr><td>base 6, LSB first</td><td class="n">28k</td><td class="n">58%</td><td class="n">95%</td><td>base 2</td><td class="n">&gt;131k</td><td class="n">11%</td><td class="n">28%</td></tr>
+<tr><td>base 2, LSB first</td><td class="n">50k</td><td class="n">11%</td><td class="n">81%</td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p>Accuracy on sums that <i>were</i> in the message is close to held-out accuracy once a receiver understands (98% against 96% for base 10 LSB at
+2<sup>17</sup> bits), so these receivers are computing, not remembering. Below the threshold both are low: with too few bits the receiver has not even memorised the examples it heard.</p>
+
+<h2>4 · What else should the message say?</h2>
+<p>Every real message design spends bits on more than one idea. The Arecibo message counts from one to ten before anything else, and Lincos
+introduces comparisons and products alongside sums. Here the numeral system is fixed (base 10, LSB first) and part of the budget goes to counting runs,
+comparisons or products (30% of statements each, or all three together). Then we ask whether addition gets easier or harder to learn.
+There are three lengths and three seeds, with 45 transformers and 5 LSTMs.</p>
+<figure><img src="fig/content.png" alt="Held-out sum accuracy by message content"><figcaption><b>Figure 2.</b> Held-out sum accuracy when part of
+the same bit budget is spent on other mathematics. Bars are means of three transformer receivers (dots). "Everything" is 40% sums and 20% each of the rest.</figcaption></figure>
+<p>At an equal budget, sums alone are always best (Figure 2). The question is whether the other content does anything <i>beyond</i> taking
+bits away from sums. To find out, we predict each receiver's accuracy from the number of sums its message contains alone, by interpolating the
+sums-only curve, and compare. Table 2 shows the gaps.</p>
+<table>
+<caption><b>Table 2.</b> Held-out sum accuracy minus the accuracy a sums-only message with the same number of sums would reach (interpolated from
+the 13 sums-only base-10 LSB receivers). Values near zero mean the other content is neutral apart from the bits it takes.</caption>
+<tr><th>extra content</th><th class="n">2<sup>14</sup> bits</th><th class="n">2<sup>15</sup> bits</th><th class="n">2<sup>16</sup> bits</th><th class="n">skill learned at 2<sup>16</sup></th></tr>
+<tr><td>counting</td><td class="n">+0.00</td><td class="n">+0.04</td><td class="n">−0.08</td><td class="n">(counting not examined)</td></tr>
+<tr><td>comparisons</td><td class="n">−0.18</td><td class="n">−0.10</td><td class="n">−0.02</td><td class="n">89% comparisons</td></tr>
+<tr><td>products</td><td class="n">−0.11</td><td class="n">−0.11</td><td class="n">−0.08</td><td class="n">83% products</td></tr>
+<tr><td>all three</td><td class="n">+0.06</td><td class="n">−0.02</td><td class="n">−0.01</td><td class="n">62% products, 84% comparisons</td></tr>
+</table>
+<p>No content helps. Counting, the traditional opening of interstellar messages, gives no head start on addition: a receiver learns sums
+as if the counting runs were not there. Counting is also expensive. Six consecutive numerals take far more bits than a sum, so 30% of statements is
+about half the budget. Products hurt a little at every length, by 8–11 points. They share the sum's form, <code>a ○ b = c</code>, and differ only in
+the operator symbol, so early on the receiver confuses the two. Comparisons cost something only while the receiver is still learning. The receivers do
+learn the other operations: 89% of comparisons and 83% of products below 16 × 16 at 2<sup>16</sup> bits. Bits spent on a concept teach that concept,
+but they do not transfer to its neighbours. A sender with a fixed budget should put the most important idea in alone first. Each extra idea costs what its
+bits cost, and a lookalike idea costs a little more. LSTMs are worse across the board at 2<sup>15</sup> bits (18% with sums only), and every addition lowers them further.</p>
+
+<h2>5 · Raw bits through a noisy channel</h2>
+CHANNEL
+
+<h2>6 · Reading the message back out of the receiver</h2>
+<p>The previous sections take the sender's view. This one takes the view of someone who intercepts a message, or of a sender who wants to check
+that a design could be read back. The question: can we recover the design from a receiver that has understood it, without ever being told the key?
+For each of six designs (bases 3, 4, 6, 10, 16 with different digit orders) and two seeds, we generate a 2<sup>17</sup>-bit message
+containing every statement kind (50% sums, 20% counting, 15% comparisons, 15% products) and <b>shuffle the symbol labels at random</b>. A
+transformer is trained on the shuffled message. The analyst then sees only the shuffled message and the receiver, and proceeds in four steps:</p>
+<ol>
+<li><b>Roles.</b> Run the receiver over the message and average its predicted next-symbol distribution after each symbol. Digits can follow
+themselves ("11"); operators almost never can. Symbols whose expected self-repeat probability is at least a tenth of the maximum become seeds. Any symbol whose
+predicted-continuation profile correlates with the seeds' mean profile (<i>r</i> &gt; 0.5) joins them. The result is the set of digits, and so the base.</li>
+<li><b>Ask it to count.</b> The operator that most often sits between consecutive numerals that end in the same operator is the list separator. At eight
+places where the message counts, we splice in "<i>x</i>, " for each digit <i>x</i> and score every one- and two-digit continuation
+followed by the separator by the receiver's likelihood. The best one is the receiver's answer to "what comes after <i>x</i>?"</li>
+<li><b>Values and order.</b> Following each digit to the first symbol of its successor gives a chain. We try every digit as zero and both
+digit orders, and keep the assignment under which the most answers are correct successors (two-digit answers such as "9 → 10" or "9 → 01"
+reveal the digit order). When no chain covers the digits, the order falls back to a weaker cue from the receiver's hidden states (§8), which is how some failed cases still get the order right.</li>
+<li><b>Operators.</b> With numerals now readable, each pair of operator symbols (<i>op</i>, <i>eq</i>) is scored by how many statements
+<code>a op b eq c</code> are true under +, and under ×. The comparison operator is the remaining symbol whose single-symbol results depend only on the sign
+of <i>a</i> − <i>b</i>, consistently in more than 95% of cases.</li>
+</ol>
+<table>
+<caption><b>Table 3.</b> Blind decipherment from 12 receivers. "Digits" is digits found / true base. "Counting" means all digit values were recovered exactly.
+Operators are counted only if the recovered + is true of 100% of decoded statements. The last column is the same receiver's held-out sum accuracy.</caption>
+<tr><th>design</th><th>seed</th><th class="n">digits</th><th>separator</th><th>counting</th><th>order</th><th>+ and ×</th><th>&lt; = &gt;</th><th class="n">held-out sums</th></tr>
+<tr><td>base 3, MSB first</td><td>0</td><td class='n'>3/3</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✗</td><td class='n'>27%</td></tr>
+<tr><td>base 3, MSB first</td><td>1</td><td class='n'>3/3</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✗</td><td class='n'>30%</td></tr>
+<tr><td>base 4, LSB first</td><td>0</td><td class='n'>4/4</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td class='n'>89%</td></tr>
+<tr><td>base 4, LSB first</td><td>1</td><td class='n'>4/4</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td class='n'>94%</td></tr>
+<tr><td>base 6, MSB first</td><td>0</td><td class='n'>6/6</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✗</td><td class='n'>44%</td></tr>
+<tr><td>base 6, MSB first</td><td>1</td><td class='n'>6/6</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td class='n'>56%</td></tr>
+<tr><td>base 10, LSB first</td><td>0</td><td class='n'>10/10</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td class='n'>85%</td></tr>
+<tr><td>base 10, LSB first</td><td>1</td><td class='n'>10/10</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td class='n'>83%</td></tr>
+<tr><td>base 10, MSB first</td><td>0</td><td class='n'>10/10</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td class='n'>77%</td></tr>
+<tr><td>base 10, MSB first</td><td>1</td><td class='n'>10/10</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✗</td><td class='n'>68%</td></tr>
+<tr><td>base 16, LSB first</td><td>0</td><td class='n'>7/16</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td class='n'>81%</td></tr>
+<tr><td>base 16, LSB first</td><td>1</td><td class='n'>7/16</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td class='n'>81%</td></tr>
+</table>
+<p>With the shuffled labels, five of the twelve messages were recovered completely: base, digit values, digit order, the plus and times signs,
+the comparison sign and its three outcomes. In those five, the recovered addition operator makes 100% of the decoded sum statements true. That is a
+check an interceptor can run without the key. The probe never misidentifies a separator, and it finds the digits exactly in every base up to 10.</p>
+<p>Failures come from two places. <b>Receivers that have not understood</b> cannot be read: the two base-3 MSB receivers get only 27–30% of held-out sums,
+and the counting probe gets no consistent chain of answers from them. The same happens for the weaker of the base-6 MSB receivers (44%) and one base-10 MSB receiver (68%). Every receiver that was read completely scores at least 57% on held-out sums. <b>The probe itself</b> is the other source. In base 16 with numbers below 128, only the digits
+0–7 ever begin a two-digit numeral, and the role step found exactly those seven, missing the other nine, although these receivers answer 81% of held-out
+sums. A base-10 LSB receiver with 83% held-out accuracy gave one wrong successor too many. Better probes would read more of these minds. Understanding
+is necessary for decipherment but, with this probe, not sufficient. For a sender, the corollary is welcome: a design that receivers learn well, such as base 4
+or base 10 written LSB first, can also be read back reliably.</p>
+
+<h2>7 · Evolving the message, and whether it travels</h2>
+EVOLVE
+
+<h2>8 · Things that did not work, and caveats</h2>
+CAVEATS
+
+<h2>9 · Limitations</h2>
+LIMITS
+
+<h2>10 · Related work</h2>
+<p><b>Message design.</b> The Arecibo message [1], Lincos [2], the Cosmic Call messages [3] and many other proposals [5, 6] all teach
+numbers first, and argue for a particular base and layout. Their arguments are about what a receiver <i>ought</i> to find obvious. Minsky argued
+that any intelligence would converge on arithmetic [7]. As far as we know this is the first work to test candidate designs empirically,
+against learners that start with no priors, using held-out generalisation as the measure of understanding.</p>
+<p><b>Arithmetic in transformers.</b> Writing the answer least-significant digit first is known to help transformers that are <i>trained to do</i>
+addition [8, 9], as are position schemes that line digits up [10]. Those works train on question-answer pairs with a known format. Here the receiver gets a
+single unlabelled stream, chosen by a sender under a bit budget, and must discover the format, the base and the operation itself. Grokking [4] and
+its mechanistic explanation [11] describe the delayed generalisation we also see.</p>
+<p><b>Decipherment and emergent communication.</b> Statistical decipherment recovers lost scripts and substitution ciphers from text [12, 13].
+Work on emergent communication studies codes that neural agents <i>invent</i> [14]. In this work one side's code is fixed, and the other side is a
+learner whose internals we then probe to recover it.</p>
+
+<h2>11 · Conclusion</h2>
+CONCLUSION
+
+<h2>References</h2>
+<ol class="refs">
+<li>The Staff at the National Astronomy and Ionosphere Center. The Arecibo message of November, 1974. <i>Icarus</i> 26(4):462–466, 1975.</li>
+<li>H. Freudenthal. <i>Lincos: Design of a Language for Cosmic Intercourse</i>. North-Holland, 1960.</li>
+<li>Y. Dutil and S. Dumas. The Evpatoria messages (Cosmic Call 1999 and 2003). Interstellar message design notes, 1999–2003.</li>
+<li>A. Power, Y. Burda, H. Edwards, I. Babuschkin, V. Misra. Grokking: generalization beyond overfitting on small algorithmic datasets. arXiv:2201.02177, 2022.</li>
+<li>D. A. Vakoch (ed.). <i>Archaeology, Anthropology, and Interstellar Communication</i>. NASA SP-2013-4413, 2014.</li>
+<li>C. Sagan, F. Drake, A. Druyan, T. Ferris, J. Lomberg, L. Salzman Sagan. <i>Murmurs of Earth: The Voyager Interstellar Record</i>. Random House, 1978.</li>
+<li>M. Minsky. Communication with alien intelligence. <i>Byte</i> 10(4), 1985.</li>
+<li>N. Lee, K. Sreenivasan, J. D. Lee, K. Lee, D. Papailiopoulos. Teaching arithmetic to small transformers. ICLR 2024.</li>
+<li>R. Nogueira, Z. Jiang, J. Lin. Investigating the limitations of transformers with simple arithmetic tasks. arXiv:2102.13019, 2021.</li>
+<li>S. McLeish et al. Transformers can do arithmetic with the right embeddings. NeurIPS 2024.</li>
+<li>N. Nanda, L. Chan, T. Lieberum, J. Smith, J. Steinhardt. Progress measures for grokking via mechanistic interpretability. ICLR 2023.</li>
+<li>B. Snyder, R. Barzilay, K. Knight. A statistical model for lost language decipherment. ACL 2010.</li>
+<li>S. Ravi and K. Knight. Deciphering foreign language. ACL 2011.</li>
+<li>A. Lazaridou and M. Baroni. Emergent multi-agent communication in the deep learning era. arXiv:2006.02419, 2020.</li>
+</ol>
+</body>
+</html>

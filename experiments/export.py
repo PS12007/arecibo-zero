@@ -64,13 +64,21 @@ recs = load(f"{ROOT}/results/channel.jsonl")
 if recs:
     t = defaultdict(list)
     for r in recs:
+        if r.get("steps", 8000) != 8000:
+            continue   # the long-training follow-up is reported separately
         t[(r["noise"], r["rep"], r["budget"])].append(r["scores"]["add_heldout"])
+    long_ = [r["scores"]["add_heldout"] for r in recs if r.get("steps", 8000) != 8000]
+    if long_:
+        out["channel_long"] = {"steps": max(r.get("steps", 8000) for r in recs), "acc": mean_sd(long_)}
     out["channel"] = [{"noise": n, "rep": rp, "budget": B, "acc": mean_sd(v)} for (n, rp, B), v in sorted(t.items())]
 
 # --- decipher ------------------------------------------------------------------
 p = f"{ROOT}/results/decipher.json"
 if os.path.exists(p):
     out["decipher"] = json.load(open(p))
+    for r in out["decipher"].values():
+        if r.get("loss") != r.get("loss"):   # NaN: receiver loaded from cache, loss not recorded
+            r["loss"] = None
 
 # --- evolution -----------------------------------------------------------------
 ev = {}
@@ -88,6 +96,20 @@ p = f"{ROOT}/results/transfer.json"
 if os.path.exists(p):
     out["transfer"] = json.load(open(p))
 
+FINDINGS = {
+    "radix": "<b>Write the least significant digit first.</b> It wins in every base: at 2<sup>15</sup> bits, base 4 LSB-first gets 87% of unseen sums and MSB-first 27%. "
+             "Base 4 needs the fewest bits to reach 50% (about 16k), ahead of base 10 (19k). Binary, the Arecibo choice, is the worst positional system: written MSB-first it never reaches 50%. "
+             "<b>The best numerals depend on the mind:</b> LSTMs given unary tally marks answer 83% of unseen sums after hearing just 41 examples, while every positional system leaves them at chance.",
+    "content": "<b>Nothing teaches addition except sums.</b> Accuracy is predicted almost exactly by how many sums fit in the message. Counting, the traditional opener, gives no head start. "
+               "Products, which look just like sums, cost a further 8–11 points. The other skills are learned on their own (89% of comparisons and 83% of products at 2<sup>16</sup> bits), but they do not transfer.",
+    "channel": "<b>Framing is everything.</b> Given the same 2<sup>16</sup> bits as raw 5-bit codewords instead of symbols, no receiver learned to add (about 1% even on sums it heard, with no noise and no repetition), "
+               "against 91% when symbol boundaries are given. With every condition at the floor, noise and repetition coding cannot be compared. A receiver that must first find the symbols needs far more than this budget.",
+    "decipher": "<b>Five of twelve shuffled messages were read back completely</b>: base, digit values, digit order, +, × and the comparison with its three outcomes. Both base-4 receivers are among them, and in each case the recovered + makes 100% of the decoded sums true. "
+                "Digits and the separator were found exactly in every base up to 10. Receivers that understood poorly (base 3, MSB first: 27–30% of unseen sums) could not be read. "
+                "Base 16 failed in the probe, not in the mind: its receivers score 81%, but only digits 0–7 ever lead a numeral and the role step missed the other nine.",
+}
+out["findings"] = FINDINGS
+
 os.makedirs(f"{ROOT}/docs", exist_ok=True)
-json.dump(out, open(f"{ROOT}/docs/data.json", "w"))
+json.dump(out, open(f"{ROOT}/docs/data.json", "w"), allow_nan=False)
 print("wrote docs/data.json", {k: (len(v) if hasattr(v, "__len__") else v) for k, v in out.items()})

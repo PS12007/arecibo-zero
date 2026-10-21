@@ -19,11 +19,14 @@ reps = [1, 3]
 budgets = [2**16]
 seeds = [0] if quick else [0, 1]
 CTX = 512
+STEPS = int(os.environ.get("STEPS", "8000"))
+if os.environ.get("LONG"):          # follow-up: clean channel, 4x the training
+    noises, reps = [0.0], [1]
 
-done = {(r["noise"], r["rep"], r["budget"], r["seed"], r["arch"]) for r in load(path)}
+done = {(r["noise"], r["rep"], r["budget"], r["seed"], r["arch"], r.get("steps", 8000)) for r in load(path)}
 dev = device()
 jobs = [(budget, noise, rep, seed) for budget in budgets for noise in noises for rep in reps
-        for seed in seeds if (noise, rep, budget, seed, "tf") not in done]
+        for seed in seeds if (noise, rep, budget, seed, "tf", STEPS) not in done]
 K = 4
 for c0 in range(0, len(jobs), K):
     chunk = jobs[c0:c0 + K]
@@ -38,11 +41,11 @@ for c0 in range(0, len(jobs), K):
         toks, codec, info = build_message(d, sym_budget, seed=seed)
         built.append((ch, toks, info, ch.encode(toks)))
     ens, losses = train_ensemble([b[3] for b in built], 2, [j[3] for j in chunk], ctx=CTX,
-                                 steps=8000, dev=dev)
+                                 steps=STEPS, dev=dev)
     for k, ((budget, noise, rep, seed), (ch, toks, info, bits)) in enumerate(zip(chunk, built)):
         sc = bit_exam(Member(ens, k), ch, toks, CTX, dev=dev)
         rec = dict(noise=noise, rep=rep, budget=budget, seed=seed, arch="tf", base=base, lsb=lsb,
-                   bits=len(bits), statements=info["statements"], loss=float(losses[k]), scores=sc,
+                   bits=len(bits), steps=STEPS, statements=info["statements"], loss=float(losses[k]), scores=sc,
                    secs=(time.time() - t0) / len(chunk), engine="ensemble")
         with open(path, "a") as f:
             f.write(json.dumps(rec) + "\n")

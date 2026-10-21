@@ -470,7 +470,7 @@ footer { margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink); 
       s += `<polyline fill="none" stroke="${col}" stroke-width="2" points="${pts.map(p => `${xs(p.noise)},${ys(p.acc[0])}`).join(' ')}"/>`;
       pts.forEach(p => s += `<circle cx="${xs(p.noise)}" cy="${ys(p.acc[0])}" r="5" fill="${col}" stroke="${css('--paper')}" stroke-width="2" data-t="${name} · ${(100 * p.noise).toFixed(0)}% flips<br>${pct(p.acc[0])} held-out sums (n=${p.acc[2]})"/>`);
       const last = pts[pts.length - 1];
-      s += `<text x="${xs(last.noise) + 10}" y="${ys(last.acc[0]) + 4}" style="fill:${css('--ink')}">${name}</text>`;
+      s += `<text x="${xs(last.noise) + 10}" y="${ys(last.acc[0]) + (rep === 1 ? -8 : 14)}" style="fill:${css('--ink')}">${name}</text>`;
     }
     el.innerHTML = `<div class="legend"><span><i style="background:${css('--s1')}"></i>no coding</span><span><i style="background:${css('--s2')}"></i>each bit sent 3× (same total bits)</span></div><svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
     el.querySelector('svg').onmousemove = e => { const d = e.target.dataset && e.target.dataset.t; d ? showTip(e, d) : hideTip(); };
@@ -490,9 +490,10 @@ footer { margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink); 
       ${mark(r.separator_correct)} count separator<br>
       ${mark(r.succ_exact)} every digit's value<br>
       ${mark(r.lsb_hat === r.lsb)} digit order<br>
-      ${mark(r.operators_correct['+'])} "+" and "="<br>
-      ${mark(r.operators_correct['*'])} "×"<br>
-      ${mark(r.comparison_correct)} comparison &lt; = &gt;</div>`).join('') + '</div>';
+      ${mark(r.operators_correct['+'] && (r.operators['+'] || {}).truth_rate > 0.99)} "+" and "="<br>
+      ${mark(r.operators_correct['*'] && (r.operators['+'] || {}).truth_rate > 0.99)} "×"<br>
+      ${mark(r.comparison_correct)} comparison &lt; = &gt;
+      ${r.exam ? `<div class="muted" style="margin-top:6px">the receiver itself: ${pct(r.exam.add_heldout)} of unseen sums</div>` : ''}</div>`).join('') + '</div>';
     const f = (D.findings || {}).decipher; if (f) document.getElementById('decipherFinding').innerHTML = `<p class="finding">${f}</p>`;
   }
 
