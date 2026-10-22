@@ -196,7 +196,9 @@ for receivers trained on raw bits (two seeds per point). Every condition is at t
 sums that <i>were</i> in the message. The same content as symbols gives 91%. The receivers did learn something: training loss fell to 0.35 nats per
 bit, about 1.75 nats per symbol, which captures the framing and the frequent patterns. But it is well above what the sums-only symbol receivers reach,
 so the arithmetic was never found. With every condition at the floor, the comparison between noise levels and repetition coding cannot be made.
-A follow-up with four times the training (32,000 steps, clean channel) is queued and will be added to the repository.</p>
+A follow-up with four times the training (32,000 steps, clean channel, two seeds) shows what more training buys. Training loss fell tenfold, to
+0.033–0.036 nats per bit: the receivers came close to memorising the bit stream. Yet they answer only 4–5% of held-out sums and 11–12% of sums they heard.
+More training made them better at reciting the message, not at understanding it.</p>
 <p>For message design this is the sharpest result in the report. The receivers that learn arithmetic from 2<sup>14</sup> symbol-level bits learn
 nothing from 2<sup>16</sup> raw bits. Finding the symbols is harder than the mathematics. The Arecibo message handles framing by its length,
 1,679 = 23 × 73, a product of two primes, which suggests a rectangle. Our results suggest that framing deserves more of the budget than any other design choice.</p>
