@@ -60,3 +60,25 @@ def test_repetition_corrects_single_flips():
     bits = ch.encode(toks)
     bits[::3] ^= 1          # one flip in every triple
     assert ch.decode(bits) == toks
+
+
+def test_sign_test_exact():
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
+    from stats import sign_test
+    assert sign_test(5, 10) == 1.0
+    assert abs(sign_test(10, 10) - 2 / 2**10) < 1e-12
+    assert abs(sign_test(0, 10) - 2 / 2**10) < 1e-12
+
+
+def test_unary_only_in_lstm_u_search():
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "experiments"))
+    import numpy as np
+    import evolve
+    rng = np.random.default_rng(0)
+    plain = {evolve.random_genome(rng)["base"] for _ in range(300)}
+    wide = {evolve.random_genome(rng, evolve.BASES_FOR["lstm-u"])["base"] for _ in range(300)}
+    assert 1 not in plain and 1 in wide
+    g = {"base": 1, "lsb": 0, "w": [1, 0, 0, 0]}
+    for _ in range(50):     # mutation never leaves the allowed set
+        g = evolve.mutate(g, rng, evolve.BASES_FOR["lstm-u"])
+        assert g["base"] in evolve.BASES_FOR["lstm-u"]
