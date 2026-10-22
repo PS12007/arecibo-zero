@@ -99,6 +99,7 @@ def transfer():
             champs[name] = genome_to_design(h["genome"])
     champs["human-b10"] = Design(base=10)
     champs["human-b2"] = Design(base=2, mix={"add": 1, "count": 0.3})
+    champs["unary"] = Design(base=1)     # §3's best LSTM numeral, on fresh seeds
     jobs = [(d, BUDGET, a, s, "transfer") for d in champs.values() for a, s in test]
     run_grid(PATH, jobs)
     recs = {key_of(r): r for r in load(PATH)}

@@ -49,13 +49,14 @@
 
 <div class="abstract"><b>Abstract.</b> We test interstellar message designs empirically. A sender writes arithmetic (sums, products, comparisons, counting) under a fixed bit budget, choosing the
 number system and digit order. The receiver is a randomly initialised transformer or LSTM trained only on that message to predict the next symbol, and it is examined on sums
-whose operand pairs never appear in the message. Across about 300 receivers trained on one laptop GPU: (1) writing the least-significant digit first beats the human order in every
+whose operand pairs never appear in the message. Across 434 receivers trained on one laptop GPU: (1) writing the least-significant digit first beats the human order in every
 base, cutting the bits needed for 50% held-out accuracy by 1.4–4×. Base 4 needs the fewest (about 16k bits), and binary written as in the Arecibo message never reaches 50%
-within 131k bits. (2) The best numerals depend on the receiver: LSTMs answer 83% of unseen sums after hearing just 41 sums in unary, where every positional system leaves
+within 131k bits. (2) The best numerals depend on the receiver: LSTMs answer 51–83% of unseen sums (three seeds) after hearing just 41 sums in unary, where every positional system leaves
 them at chance. (3) At a fixed budget, accuracy on sums is predicted by the number of sums alone. Counting gives no head start, and products, which share the sums' form, cost
 8–11 points. (4) Delivered as raw bits without symbol boundaries, the same content teaches nothing (about 1% against 91%): framing is the hardest part of the message.
 (5) Reversing roles, we recover the complete key of 5 of 12 symbol-shuffled messages (base, digit values, digit order, +, × and the comparison) by questioning a trained receiver.
-A genetic search over designs independently converges on base 4, least-significant digit first.</div>
+A genetic search over designs independently converges on base 4, least-significant digit first for transformers, and on unary for LSTMs. (6) Sent to five kinds of
+fresh receivers, plain unary sums, which neither search proposed, are the only design that every kind understood at 2<sup>14</sup> bits (28–56%, against at most 14% on LSTMs for any other design).</div>
 
 <h2>1 · Introduction</h2>
 <p>In 1974 the Arecibo radio telescope sent 1,679 bits towards the globular cluster M13. The message opens with the numbers one to ten
@@ -137,7 +138,7 @@ digits and more carries, and the context holds fewer examples. Small bases are n
 ahead of base 10 (16k against 19k bits). The optimum is in the middle: few enough symbols that each digit's role is learned quickly, and short enough numerals
 that carries are rare.</p>
 <p><b>The best numeral depends on the mind.</b> Unary tallies are mid-table for transformers, with a 22k-bit threshold and a plateau near 80%. For LSTMs they are
-in a class of their own. With 2<sup>14</sup> bits, an LSTM given unary sums answers 83% of held-out questions, while every positional system is at 7% or below.
+in a class of their own. With 2<sup>14</sup> bits, an LSTM given unary sums answers 83% of held-out questions (one seed; two fresh seeds in §7 give 61% and 51%), while every positional system is at 7% or below.
 That message holds just <b>41 sums</b>, covering about 3% of the allowed pairs. Unary addition is concatenation, and a recurrent network can do it with
 one counter that goes up during the operands and down during the answer. The same counter solves no positional system. At 2<sup>16</sup> bits the LSTM's
 positional results are still at most 54% (base 10, LSB first, again ahead of MSB at 26%). A sender who designed for transformers would pick base 4, LSB first.
@@ -260,9 +261,31 @@ Design search: best and median held-out sum accuracy of the population in each g
 digit first. The best scores 44%, against 18% for the human decimal design and 5% for Arecibo-style binary. The champion keeps some counting (23% of statements).
 But it does not beat the simple sums-only base-4 LSB message from §3, which scored 51% at the same budget, so with two receivers per evaluation the extra counting is
 within noise rather than a discovery. Designs that add products, or that write numbers MSB first, are eliminated early.</p>
-<p class="box">Status: the same search run against LSTM receivers, and the transfer test that sends each champion to five kinds of fresh receivers
-(small, standard and deep transformers; small and standard LSTMs), were still running when this version of the report was written. They will be added to
-the repository and the demo page. §3 predicts the outcome: an LSTM-tuned search should drift towards unary, which the receivers in this search could not choose.</p>
+<p><b>The LSTM search found nothing to climb.</b> Run against two LSTM receivers in the same search space, which excludes unary, the best design
+(base 3, LSB first, sums only) scored 8% in generation 0 and never improved. At 2<sup>14</sup> bits every positional system leaves LSTMs at chance (§3), so the
+fitness landscape is flat.</p>
+<p><b>Allowed to use tally marks, the LSTM search found them at once.</b> A random unary design in generation 0 scored 29%, against at most 5% for the
+rest, and by generation 2 all eight designs were unary. This is the outcome §3 predicts. But the search did not find the right <i>content</i>. Its champion keeps
+comparisons and counting (32% in the search). Tally-mark statements are long, so those extra statements cut the message to 13–22 sums, against 41 for pure sums.
+Two receivers per evaluation also make the scores noisy: the same design scored 10% and 54% on two seeds. Selecting on noisy scores favours lucky designs, so
+every champion scores lower on fresh receivers.</p>
+<table>
+<caption><b>Table 4.</b> Transfer: each design sent to fresh receivers (seeds 5 and 6, never used in a search) of five kinds, at 2<sup>14</sup> bits.
+Held-out sum accuracy, mean of two seeds.</caption>
+<tr><th>message</th><th>design</th><th class="n">small TF</th><th class="n">TF</th><th class="n">deep TF</th><th class="n">small LSTM</th><th class="n">LSTM</th><th class="n">mean</th></tr>
+<tr><td><b>unary sums (§3)</b></td><td>unary · add1</td><td class='n'>28%</td><td class='n'>40%</td><td class='n'>39%</td><td class='n'>54%</td><td class='n'>56%</td><td class='n'><b>43%</b></td></tr>
+<tr><td>champion, tuned on transformers</td><td>b4-lsb · add0.76+count0.23</td><td class='n'>14%</td><td class='n'>41%</td><td class='n'>16%</td><td class='n'>3%</td><td class='n'>5%</td><td class='n'>16%</td></tr>
+<tr><td>champion, LSTMs with unary allowed</td><td>unary · add0.89+cmp0.46+count0.18</td><td class='n'>6%</td><td class='n'>5%</td><td class='n'>7%</td><td class='n'>13%</td><td class='n'>14%</td><td class='n'>9%</td></tr>
+<tr><td>human: decimal sums</td><td>b10 · add1</td><td class='n'>16%</td><td class='n'>22%</td><td class='n'>9%</td><td class='n'>3%</td><td class='n'>3%</td><td class='n'>11%</td></tr>
+<tr><td>champion, tuned on LSTMs</td><td>b3-lsb · add0.56</td><td class='n'>9%</td><td class='n'>15%</td><td class='n'>12%</td><td class='n'>3%</td><td class='n'>5%</td><td class='n'>9%</td></tr>
+<tr><td>Arecibo-style: binary + counting</td><td>b2 · add1+count0.3</td><td class='n'>3%</td><td class='n'>3%</td><td class='n'>5%</td><td class='n'>2%</td><td class='n'>4%</td><td class='n'>3%</td></tr>
+</table>
+<p><b>The most portable message is the oldest numeral.</b> Plain unary sums, which neither search proposed, are understood by every kind of receiver
+(Table 4): 54–56% by LSTMs and 28–40% by transformers, 43% on average. The transformer champion matches it only on the kind of receiver it was tuned on (41% against 40%)
+and falls to 14–16% on smaller and deeper transformers and to 3–5% on LSTMs. Human decimal sums average 10%, and the Arecibo-style binary message 3%, at the floor
+for every receiver. Tuning a message to one mind over-fits it to that mind. Two qualifications apply. The comparison is at the smallest budget only: with 2<sup>15</sup>
+bits or more, base 4 written LSB first is far ahead for transformers (87% against 62%, §3). And the fresh LSTM seeds give 51–61% for unary, not the 83% of the single
+seed in §3, so that number was a lucky draw.</p>
 
 <h2>8 · Things that did not work, and caveats</h2>
 <figure><img src="fig/numberline.png" alt="First principal component of the hidden state against numeral value for six receivers"><figcaption><b>Figure 5.</b>
@@ -309,8 +332,9 @@ the easiest to examine with held-out questions, so we start there. The number ra
 <p><b>Budgets.</b> Even the best design needs about 16,000 bits to reach 50% on held-out sums, and nothing learned anything at 8,192. The 1,679 bits of the
 Arecibo message would teach these receivers nothing about arithmetic. A patient receiver that re-reads a short message forever might do better than our fixed
 8,000 training steps suggest. We did not test that, and it would change the trade-offs between length and repetition.</p>
-<p><b>Small searches.</b> The design search (§7) cannot choose unary and uses populations of 8 over 4 generations, two receivers per evaluation and the smallest budget. It can find a good
-region but not the best design.</p>
+<p><b>Small searches.</b> The design searches (§7) use populations of 8 over 4 generations, two receivers per evaluation and the smallest budget. With two receivers,
+seed noise is as large as the differences being selected on, so champions regress on fresh receivers. The searches find a good region (base 4 LSB first; unary)
+but not the best design within it.</p>
 
 <h2>10 · Related work</h2>
 <p><b>Message design.</b> The Arecibo message [1], Lincos [2], the Cosmic Call messages [3] and many other proposals [5, 6] all teach
@@ -328,8 +352,8 @@ learner whose internals we then probe to recover it.</p>
 <h2>11 · Conclusion</h2>
 <p>Treating message design as an experiment, with untrained minds as receivers and held-out questions as the test of understanding, gives clear and
 sometimes surprising answers. Write the least-significant digit first: it wins in every base, by up to a factor of four in bits. Use a small but not tiny base:
-base 4 beats both decimal and the binary of the Arecibo message, which these receivers can barely learn. Do not expect one design to suit every mind: tally marks
-are mediocre for transformers and by far the best for LSTMs. Spend bits on the idea you want understood, because counting and other neighbouring ideas do not transfer.
+base 4 beats both decimal and the binary of the Arecibo message, which these receivers can barely learn. Do not expect one design to suit every mind: given 2<sup>15</sup> bits or more, base 4 written LSB first is best for transformers, while tally marks are by far the best for LSTMs.
+At the smallest budget, plain tally marks were the only design every kind of receiver understood, and a message tuned to one kind of receiver did poorly on the others. Spend bits on the idea you want understood, because counting and other neighbouring ideas do not transfer.
 Most of all, solve framing first: with symbol boundaries removed, the same receivers learned nothing from four times the bits. The receivers can also be turned around.
 A network that has understood a message can be questioned until it gives the message's key back, and this worked completely for five of twelve shuffled designs.
 The trained receiver on the demo page answers sums that were never transmitted to it. That is, in a small way, what a first contact message is supposed to achieve.</p>

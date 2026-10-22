@@ -99,11 +99,15 @@ if os.path.exists(p):
 FINDINGS = {
     "radix": "<b>Write the least significant digit first.</b> It wins in every base: at 2<sup>15</sup> bits, base 4 LSB-first gets 87% of unseen sums and MSB-first 27%. "
              "Base 4 needs the fewest bits to reach 50% (about 16k), ahead of base 10 (19k). Binary, the Arecibo choice, is the worst positional system: written MSB-first it never reaches 50%. "
-             "<b>The best numerals depend on the mind:</b> LSTMs given unary tally marks answer 83% of unseen sums after hearing just 41 examples, while every positional system leaves them at chance.",
+             "<b>The best numerals depend on the mind:</b> LSTMs given unary tally marks answer 51–83% of unseen sums (three seeds) after hearing just 41 examples, while every positional system leaves them at chance.",
     "content": "<b>Nothing teaches addition except sums.</b> Accuracy is predicted almost exactly by how many sums fit in the message. Counting, the traditional opener, gives no head start. "
                "Products, which look just like sums, cost a further 8–11 points. The other skills are learned on their own (89% of comparisons and 83% of products at 2<sup>16</sup> bits), but they do not transfer.",
     "channel": "<b>Framing is everything.</b> Given the same 2<sup>16</sup> bits as raw 5-bit codewords instead of symbols, no receiver learned to add (about 1% even on sums it heard, with no noise and no repetition), "
                "against 91% when symbol boundaries are given. With every condition at the floor, noise and repetition coding cannot be compared. With 4× the training the receivers nearly memorise the bit stream (training loss down tenfold) but still answer only 4–5% of unseen sums: more training buys recitation, not understanding.",
+    "evolve": "<b>Tuning a message to one mind over-fits it.</b> The search on transformers converged on base 4, LSB first; the search on LSTMs, once allowed tally marks, "
+              "switched to them within two generations. Sent to fresh receivers of five kinds, each champion did well only on its own kind. "
+              "Plain unary sums, which no search proposed, were the only design every kind understood: 43% on average, against 16% for the transformer champion, "
+              "10% for decimal and 3% for Arecibo-style binary.",
     "decipher": "<b>Five of twelve shuffled messages were read back completely</b>: base, digit values, digit order, +, × and the comparison with its three outcomes. Both base-4 receivers are among them, and in each case the recovered + makes 100% of the decoded sums true. "
                 "Digits and the separator were found exactly in every base up to 10. Receivers that understood poorly (base 3, MSB first: 27–30% of unseen sums) could not be read. "
                 "Base 16 failed in the probe, not in the mind: its receivers score 81%, but only digits 0–7 ever lead a numeral and the role step missed the other nine.",

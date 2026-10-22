@@ -521,7 +521,7 @@ footer { margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink); 
     if (D.transfer) {
       const archs = ['tf-s', 'tf', 'tf-deep', 'lstm-s', 'lstm'];
       const an = {'tf-s': 'small TF', tf: 'TF', 'tf-deep': 'deep TF', 'lstm-s': 'small LSTM', lstm: 'LSTM'};
-      const cn = {tf: 'champion (transformers)', lstm: 'champion (LSTMs)', 'lstm-u': 'champion (LSTMs, tallies allowed)', mixed: 'champion (both)', 'human-b10': 'human: decimal sums', 'human-b2': 'human: binary + counting'};
+      const cn = {tf: 'champion (transformers)', lstm: 'champion (LSTMs)', 'lstm-u': 'champion (LSTMs, tallies allowed)', unary: 'plain unary sums', mixed: 'champion (both)', 'human-b10': 'human: decimal sums', 'human-b2': 'human: binary + counting'};
       const ink = css('--ink');
       let h = `<thead><tr><th>message ↓ · fresh receiver →</th>${archs.map(a => `<th>${an[a]}</th>`).join('')}</tr></thead><tbody>`;
       for (const [k, r] of Object.entries(D.transfer)) {
