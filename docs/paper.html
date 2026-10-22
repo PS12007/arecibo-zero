@@ -274,6 +274,12 @@ a fallback for digit order. Figure 5 shows why. In five of the six receivers PC1
 and sums go up to 127, so the main axis of variation marks <i>where in the statement</i> a numeral sits (operand or answer), not how large it is.
 PC1 correlates with that split at <i>r</i> = 0.47–0.60, and with size inside the operand range at only ρ = 0.01–0.16.
 The base-16 receiver shows neither. A probe for size would first have to factor out a numeral's role.</li>
+<li><b>A better role probe for base 16 found the digits but not a rule.</b> The receivers have essentially memorised their message: with the full
+context the median probability of the top prediction is 1.0, and it is still 0.99 for base 10 with only 8 symbols of context, enough to locate
+a passage in a 28k-symbol message. A memorising receiver is never uncertain, so cues built from its expectations see little. With just 2 symbols of context it is
+uncertain again, and digits share probability mass where a new operand begins. In both base-16 receivers, all nine digits that the role step missed then
+share more mass with the seed digits (0.35–0.46) than any operator does (≤ 0.30). But no threshold on that score, absolute, relative to the seeds, or
+second-order, worked for all six designs without also admitting operators elsewhere, so Table 3 uses the original rule.</li>
 <li><b>Simple role heuristics failed.</b> Separating digits from operators by symbol entropy or frequency did not work. Using self-repetition alone wrongly
 called "=" a digit, because comparisons produce "= =", and missed rare base-16 digits. The seed-and-correlate rule in §6 fixes the first problem but not the second.</li>
 <li><b>Exam resolution.</b> Each exam asks 400 held-out sums, so a single score has a binomial standard error of at most 2.5 points.
