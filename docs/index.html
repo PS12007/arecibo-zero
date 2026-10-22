@@ -501,9 +501,9 @@ footer { margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink); 
   function drawEvolve() {
     const el = document.getElementById('evolveChart');
     if (!D.evolve) return;
-    const W = 640, H = 220, m = {l: 46, r: 130, t: 12, b: 36};
-    const names = {tf: 'tuned on transformers', lstm: 'tuned on LSTMs', mixed: 'tuned on both'};
-    const cols = {tf: css('--s1'), lstm: css('--s2'), mixed: css('--s3')};
+    const W = 640, H = 220, m = {l: 46, r: 160, t: 12, b: 36};
+    const names = {tf: 'tuned on transformers', lstm: 'tuned on LSTMs', 'lstm-u': 'LSTMs, tallies allowed', mixed: 'tuned on both'};
+    const cols = {tf: css('--s1'), lstm: css('--s2'), 'lstm-u': css('--s3'), mixed: css('--s1')};
     const G = Math.max(...Object.values(D.evolve).map(e => e.best_per_gen.length));
     const xs = g => m.l + (W - m.l - m.r) * g / Math.max(1, G - 1), ys = v => m.t + (H - m.t - m.b) * (1 - v);
     let s = axes(W, H, m, 1, [0, .5, 1]);
@@ -521,7 +521,7 @@ footer { margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink); 
     if (D.transfer) {
       const archs = ['tf-s', 'tf', 'tf-deep', 'lstm-s', 'lstm'];
       const an = {'tf-s': 'small TF', tf: 'TF', 'tf-deep': 'deep TF', 'lstm-s': 'small LSTM', lstm: 'LSTM'};
-      const cn = {tf: 'champion (transformers)', lstm: 'champion (LSTMs)', mixed: 'champion (both)', 'human-b10': 'human: decimal sums', 'human-b2': 'human: binary + counting'};
+      const cn = {tf: 'champion (transformers)', lstm: 'champion (LSTMs)', 'lstm-u': 'champion (LSTMs, tallies allowed)', mixed: 'champion (both)', 'human-b10': 'human: decimal sums', 'human-b2': 'human: binary + counting'};
       const ink = css('--ink');
       let h = `<thead><tr><th>message ↓ · fresh receiver →</th>${archs.map(a => `<th>${an[a]}</th>`).join('')}</tr></thead><tbody>`;
       for (const [k, r] of Object.entries(D.transfer)) {

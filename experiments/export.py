@@ -82,7 +82,7 @@ if os.path.exists(p):
 
 # --- evolution -----------------------------------------------------------------
 ev = {}
-for name in ("tf", "lstm", "mixed"):
+for name in ("tf", "lstm", "lstm-u", "mixed"):
     p = f"{ROOT}/results/evolve_{name}.json"
     if os.path.exists(p):
         h = json.load(open(p))

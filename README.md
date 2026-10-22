@@ -18,12 +18,14 @@ About 300 receivers, all trained from scratch on one laptop GPU.
 | Finding | Number |
 |---|---|
 | Least-significant digit first beats most-significant first in **every** base. Held-out sums at 2<sup>15</sup> bits, base 4 | **87% vs 27%** |
+| LSB first ahead in matched (base, length, seed) cells, excluding ties at the floor (sign test *p* = 4×10<sup>−12</sup>; mean gain 21 pts, 95% CI 16–27) | **47 of 49** |
 | Bits needed to reach 50% held-out accuracy: base 4 LSB-first (best) / base 10 LSB-first / base 10 as humans write it | **16k** / 19k / 27k |
 | Binary written MSB-first (the Arecibo choice): held-out accuracy at 2<sup>17</sup> bits | 28%, never reaches 50% |
 | LSTMs, unary tally marks, 2<sup>14</sup> bits (just **41 example sums**) vs every positional system | **83%** vs ≤ 7% |
 | Content: accuracy predicted from the number of sums alone; extra counting / products change it by | ≈ 0 / −8 to −11 pts |
 | Raw-bit channel: same 2<sup>16</sup> bits as 5-bit codewords with no symbol boundaries vs as symbols | **≈1%** vs 91% |
 | Blind decipherment of shuffled messages from the receiver alone (base, digit values, order, +, ×, < = >) | **5 of 12** complete |
+| Bare question vs the same question after a single end-of-statement symbol (12 receivers): the context is framing, not examples | 48% vs **71%** |
 | Genetic design search on transformers: champion vs human decimal vs Arecibo-style binary (2<sup>14</sup> bits) | **44%** (base 4, LSB-first) vs 18% vs 5% |
 
 ## Results to read carefully
@@ -32,6 +34,7 @@ About 300 receivers, all trained from scratch on one laptop GPU.
 - **Counting first teaches nothing about addition.** The traditional opening of interstellar messages costs about half the budget when it is 30% of statements and gives no head start. Bits spent on a concept teach that concept, not its neighbours.
 - **Framing is the hardest part.** Receivers that learn arithmetic from 2<sup>14</sup> symbol-level bits learn nothing from 2<sup>16</sup> raw bits. So noise and repetition coding could not be compared: everything was at the floor. A run with 4× the training is queued.
 - **Decipherment fails in two ways.** Receivers that understood poorly (base 3 MSB-first, 27–30%) cannot be read. Base-16 receivers understood well (81%), but the probe found only the 7 digits that ever lead a numeral.
+- **Receivers memorise their message and still generalise.** With 8 symbols of context a base-10 receiver predicts the next symbol with median probability 0.99, enough to locate itself in a 28k-symbol message. Its hidden state's main axis marks whether a numeral is an operand or an answer, not its size (report Fig. 5).
 - **Seeds matter near the threshold.** Delayed, grokking-like generalisation makes two seeds of the same design differ by up to 40 points (binary LSB-first at 2<sup>16</sup>: 53% and 94%).
 - **The 1,679-bit Arecibo message is far too short for these receivers.** Nothing learned anything at 8,192 bits.
 
@@ -44,7 +47,7 @@ About 300 receivers, all trained from scratch on one laptop GPU.
 | Batched trainer: up to 10 transformers with stacked weights in one model | [`arecibo/ensemble.py`](arecibo/ensemble.py) |
 | Raw-bit channel: random codewords, repetition coding, bit flips | [`arecibo/channel.py`](arecibo/channel.py) |
 | Blind decipherment: roles from the receiver's expectations, a counting probe, operator matching | [`arecibo/decipher.py`](arecibo/decipher.py) |
-| Experiments: radix, content, channel, decipher, evolve (+ transfer), figures, demo export | [`experiments/`](experiments) |
+| Experiments: radix, content, channel, decipher, evolve (+ transfer), cold exam, paired stats, figures, demo export | [`experiments/`](experiments) |
 | In-browser receiver (checked against PyTorch to 1.5e-5) | [`docs/receiver.js`](docs/receiver.js) |
 
 ## Run it
@@ -61,7 +64,7 @@ Nothing is downloaded: every message is generated. On a laptop RTX 5060 the whol
 
 ```
 arecibo/        messages, receivers, batched trainer, channel, decipherment
-experiments/    radix, content, channel, decipher, decipher_exam, evolve, figures, export, export_model
+experiments/    radix, content, channel, decipher, decipher_exam, cold_exam, evolve, stats, figures, export, export_model
 results/        per-receiver JSON results (small, committed)
 docs/           demo page, in-browser receiver, report (HTML + PDF), figures, demo data
 tests/          CPU unit tests
