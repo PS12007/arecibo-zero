@@ -284,8 +284,11 @@ makes the point where a receiver "gets it" sensitive to the seed, so thresholds 
 <i>r</i> = 0.87 across ten designs), but there both are near chance. A pilot at 2<sup>16</sup> bits (base 10 LSB) gave 90–93% single against 94% batched.</li>
 <li><b>One evolve stage stalled.</b> During a period of low system memory the first evolve run made no progress for five hours with the GPU fully busy. The same jobs
 then ran at the normal speed when restarted. No results were lost. The stall looks like a driver or paging problem, not the code.</li>
-<li><b>The exam is not cold.</b> Each question follows about 64 symbols of real message, so the receiver is "in context". A receiver asked a bare question with
-no preceding message may do worse. This is the natural setting for a receiver that has just heard the transmission.</li>
+<li><b>The exam is not cold, but it does not need to be warm.</b> Each exam question follows a stretch of real message. To see how much that matters
+we asked the twelve decipherment receivers (§6) 200 held-out sums each, preceded by 0, 1, 4 or 16 whole statements (<code>experiments/cold_exam.py</code>).
+A bare question is answered much worse: 48% on average against 71% after one statement. But one statement is all it takes, and 16 add nothing (68%).
+Even a bare question preceded only by the end-of-statement symbol scores 71%, a gain of 14–36 points per receiver over the truly bare question.
+So the receivers do not learn from examples in the context. They need to know where a statement begins. This is the framing problem of §5 again, in miniature.</li>
 </ul>
 
 <h2>9 · Limitations</h2>
