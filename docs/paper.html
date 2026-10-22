@@ -252,6 +252,8 @@ or base 10 written LSB first, can also be read back reliably.</p>
 <p>Finally we let the message design itself. A genome is a base (2–16), a digit order and weights for the four statement kinds. A population of 8
 designs is scored by the mean held-out sum accuracy of two transformer receivers at 2<sup>14</sup> bits. The best 3 survive each generation, and 5 mutants
 replace the rest. The starting population contains two human designs, decimal sums as humans write them and Arecibo-style binary with counting, plus six random ones.</p>
+<figure class="half"><img src="fig/evolve.png" alt="Best and median fitness per generation of the design search"><figcaption><b>Figure 4.</b>
+Design search: best and median held-out sum accuracy of the population in each generation, at 2<sup>14</sup> bits.</figcaption></figure>
 <p><b>The search rediscovered the main result on its own.</b> After four generations every one of the top six designs is base 4, written least-significant
 digit first. The best scores 44%, against 18% for the human decimal design and 5% for Arecibo-style binary. The champion keeps some counting (23% of statements).
 But it does not beat the simple sums-only base-4 LSB message from §3, which scored 51% at the same budget, so with two receivers per evaluation the extra counting is
@@ -261,11 +263,17 @@ within noise rather than a discovery. Designs that add products, or that write n
 the repository and the demo page. §3 predicts the outcome: an LSTM-tuned search should drift towards unary, which the receivers in this search could not choose.</p>
 
 <h2>8 · Things that did not work, and caveats</h2>
+<figure><img src="fig/numberline.png" alt="First principal component of the hidden state against numeral value for six receivers"><figcaption><b>Figure 5.</b>
+The receiver's "number line": the first principal component of the hidden state after each numeral (3,000 numerals, seed-0 receivers), against the numeral's
+true value. Black line: median per value. ρ is the rank correlation over all numerals. "Deciphered" refers to Table 3.</figcaption></figure>
 <ul>
 <li><b>Reading values from the receiver's geometry did not work reliably.</b> The first plan was to recover digit values from the first principal component
 of the hidden state at the end of each numeral, the receiver's "number line". Its rank correlation with the true digit values ranged from −1.0 to 0.64
 across the twelve receivers. That is informative about digit order in some cases and useless in others. The counting probe replaced it, and geometry is kept only as
-a fallback for digit order.</li>
+a fallback for digit order. Figure 5 shows why. In five of the six receivers PC1 jumps where values cross 64. Operands are always below 64
+and sums go up to 127, so the main axis of variation marks <i>where in the statement</i> a numeral sits (operand or answer), not how large it is.
+PC1 correlates with that split at <i>r</i> = 0.47–0.60, and with size inside the operand range at only ρ = 0.01–0.16.
+The base-16 receiver shows neither. A probe for size would first have to factor out a numeral's role.</li>
 <li><b>Simple role heuristics failed.</b> Separating digits from operators by symbol entropy or frequency did not work. Using self-repetition alone wrongly
 called "=" a digit, because comparisons produce "= =", and missed rare base-16 digits. The seed-and-correlate rule in §6 fixes the first problem but not the second.</li>
 <li><b>Exam resolution.</b> Each exam asks 400 held-out sums, so a single score has a binomial standard error of at most 2.5 points.

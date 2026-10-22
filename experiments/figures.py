@@ -133,28 +133,83 @@ def fig_channel():
 
 
 def fig_evolve():
-    fig, ax = plt.subplots(figsize=(5.5, 3.4))
-    any_ = False
-    for c, name in zip(SERIES, ("tf", "lstm", "lstm-u", "mixed")):
+    from evolve import genome_to_design
+    names = {"tf": "transformers", "lstm": "LSTMs", "lstm-u": "LSTMs, unary allowed", "mixed": "mixed"}
+    fig, ax = plt.subplots(figsize=(6, 3.4))
+    any_, n = False, 0
+    for c, name in zip(SERIES, names):
         p = f"{ROOT}/results/evolve_{name}.json"
         if not os.path.exists(p):
             continue
         any_ = True
         h = json.load(open(p))["history"]
+        n = max(n, len(h))
         best = [g[0]["fitness"] for g in h]
         med = [float(np.median([x["fitness"] for x in g])) for g in h]
-        ax.plot(range(len(h)), best, "-o", color=c, lw=2, ms=5, label=f"{name} receivers: best")
-        ax.plot(range(len(h)), med, "--", color=c, lw=1.2, alpha=0.7, label="median")
+        ax.plot(range(len(h)), best, "-o", color=c, lw=2, ms=5, label=names[name])
+        ax.plot(range(len(h)), med, "--", color=c, lw=1.2, alpha=0.7)
+        d = genome_to_design(h[-1][0]["genome"])
+        lab = radix_label(d.base, d.lsb_first and d.base > 1)
+        ax.annotate(lab, (len(h) - 1, best[-1]), xytext=(6, 0), textcoords="offset points", va="center",
+                    fontsize=8, color=INK)
     if not any_:
         plt.close(fig)
         return
+    ax.set_xticks(range(n))
+    ax.set_xlim(-0.2, n - 0.2)
     ax.set_xlabel("generation")
     ax.set_ylabel("held-out sums correct")
     ax.set_ylim(0, 1)
-    ax.legend(frameon=False, fontsize=8)
+    ax.legend(frameon=False, fontsize=8, loc="upper left", title="receivers (solid: best, dashed: median)",
+              title_fontsize=8)
     ax.set_title("Evolving the message ($2^{14}$ bits)", loc="left", color=INK)
     style(ax)
     fig.savefig(f"{FIG}/evolve.png")
+    plt.close(fig)
+
+def spearman(x, y):
+    rx, ry = np.argsort(np.argsort(x)), np.argsort(np.argsort(y))
+    return float(np.corrcoef(rx, ry)[0, 1])
+
+
+def fig_numberline():
+    """First principal component of the hidden state after each numeral, against
+    the numeral's true value: the receiver's "number line" (seed 0 receivers)."""
+    keys = ["b3-msb", "b4-lsb", "b6-msb", "b10-msb", "b10-lsb", "b16-lsb"]
+    paths = [f"{ROOT}/results/numberline_{k}-s0.npz" for k in keys]
+    if not all(os.path.exists(p) for p in paths):
+        return
+    dec = {}
+    if os.path.exists(f"{ROOT}/results/decipher.json"):
+        dec = json.load(open(f"{ROOT}/results/decipher.json"))
+    fig, axes = plt.subplots(2, 3, figsize=(9, 4.8), sharex=True)
+    for ax, k, p in zip(axes.flat, keys, paths):
+        z = np.load(p)
+        pc, v = z["pc"], z["value"]
+        ok = (v >= 0) & (v < 128)          # products above 127 are too rare to plot
+        pc, v = pc[ok], v[ok]
+        pc = (pc - pc.mean()) / (pc.std() + 1e-9)
+        ax.plot(v, pc, "o", ms=2, color=SERIES[0], alpha=0.15, mec="none")
+        vs = np.unique(v)
+        med = [np.median(pc[v == u]) for u in vs]
+        ax.plot(vs, med, "-", color=INK, lw=1.4)
+        ax.axvline(63.5, color=INK2, lw=0.8, ls=":")
+        b, o = k.split("-")
+        rho = spearman(v, pc)
+        full = dec.get(f"{k}-s0", {})
+        read = (full.get("succ_exact") and full.get("comparison_correct")
+                and all(full.get("operators_correct", {}).values())) if full else None
+        tag = "" if read is None else ("  (deciphered)" if read else "  (not deciphered)")
+        ax.set_title(f"base {b[1:]}, {o.upper()} first  ρ = {rho:+.2f}{tag}", loc="left", fontsize=8.5, color=INK)
+        style(ax)
+    fig.supxlabel("true value of the numeral (dotted line: operands are always below 64, sums reach 127)", fontsize=9,
+                  color=INK)
+    for ax in axes[:, 0]:
+        ax.set_ylabel("hidden-state PC1 (z)")
+    fig.suptitle("PC1 of the hidden state after each numeral: it marks operand vs answer (step at 64), not size", x=0.05, ha="left",
+                 fontsize=11, color=INK)
+    fig.tight_layout()
+    fig.savefig(f"{FIG}/numberline.png")
     plt.close(fig)
 
 
@@ -163,4 +218,5 @@ if __name__ == "__main__":
     fig_content()
     fig_channel()
     fig_evolve()
+    fig_numberline()
     print("figures ->", FIG)
