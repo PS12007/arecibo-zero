@@ -124,7 +124,9 @@ contains only sums. Each cell is a separately trained receiver, or two.</figcapt
 2 lengths × 1 seed for LSTMs (26 receivers). Every message contains only sums. Three results stand out.</p>
 <p><b>Least-significant digit first wins in every base.</b> At 2<sup>15</sup> bits a base-4 message written LSB first gets 87% of
 held-out sums right and the MSB-first version 27%. The same gap is 66% against 13% for base 3, 72% against 37% for base 16, and 84% against 64% for
-base 10. In bits needed to reach 50% held-out accuracy (Table 1), MSB-first costs 1.4× (base 10) to 4× (base 4) more. The reason is plausibly the
+base 10. In bits needed to reach 50% held-out accuracy (Table 1), MSB-first costs 1.4× (base 10) to 4× (base 4) more. Over all 60 transformer cells where both orders were trained with the same base, length and seed, LSB first is ahead in 47 of the
+49 that are not tied at the floor (two-sided sign test <i>p</i> = 4×10<sup>−12</sup>). The mean gain is 21 points (bootstrap 95% interval 16–27).
+The LSTM cells agree: 7 of 7 untied pairs, mean gain 9 points (<code>experiments/stats.py</code>). The reason is plausibly the
 receiver's own constraint, not the arithmetic: it writes the answer one symbol at a time, left to right. Written LSB first, each digit of
 the sum depends only on digits already seen and one carry. Written MSB first, the first digit of the answer depends on a carry chain that has not been
 "computed" yet. This matches what is known for transformers trained on addition [8, 9], but here no one told the receiver what the task was.
@@ -266,6 +268,8 @@ across the twelve receivers. That is informative about digit order in some cases
 a fallback for digit order.</li>
 <li><b>Simple role heuristics failed.</b> Separating digits from operators by symbol entropy or frequency did not work. Using self-repetition alone wrongly
 called "=" a digit, because comparisons produce "= =", and missed rare base-16 digits. The seed-and-correlate rule in §6 fixes the first problem but not the second.</li>
+<li><b>Exam resolution.</b> Each exam asks 400 held-out sums, so a single score has a binomial standard error of at most 2.5 points.
+Seed-to-seed differences are larger than that: the median gap between the two seeds of a transformer cell is 3 points, and the largest is 44.</li>
 <li><b>Seed variance is large near the threshold.</b> The two LSB-first binary receivers at 2<sup>16</sup> bits scored 53% and 94%. Delayed generalisation
 makes the point where a receiver "gets it" sensitive to the seed, so thresholds in Table 1 are rough to within a factor of about 1.5.</li>
 <li><b>The batched trainer was cross-checked only near the floor.</b> At 2<sup>13</sup> bits single and batched receivers agree on average (mean difference 0.2 points,

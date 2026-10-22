@@ -135,7 +135,7 @@ def fig_channel():
 def fig_evolve():
     fig, ax = plt.subplots(figsize=(5.5, 3.4))
     any_ = False
-    for c, name in zip(SERIES, ("tf", "lstm", "mixed")):
+    for c, name in zip(SERIES, ("tf", "lstm", "lstm-u", "mixed")):
         p = f"{ROOT}/results/evolve_{name}.json"
         if not os.path.exists(p):
             continue

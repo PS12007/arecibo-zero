@@ -4,7 +4,7 @@ search with different populations (transformers only / LSTMs only / mixed)
 and cross-testing the winners asks whether a message tuned to one kind of
 mind is understood by another.
 
-usage: python evolve.py POP   (POP in tf, lstm, mixed, transfer)"""
+usage: python evolve.py POP   (POP in tf, lstm, lstm-u, mixed, transfer)"""
 import json
 import os
 import sys
@@ -16,8 +16,11 @@ from common import Design, run_grid, load, key_of, ROOT
 BUDGET = int(os.environ.get("BUDGET", str(2**14)))
 PATH = f"{ROOT}/results/evolve.jsonl"
 POPS = {"tf": [("tf", 0), ("tf", 1)], "lstm": [("lstm", 0), ("lstm", 1)],
-        "mixed": [("tf", 0), ("lstm", 0)]}
+        "mixed": [("tf", 0), ("lstm", 0)], "lstm-u": [("lstm", 0), ("lstm", 1)]}
 BASES = [2, 3, 4, 6, 10, 16]
+# lstm-u: the LSTM search again, but tally marks (base 1) are allowed. §3 says
+# unary is by far the best numeral for LSTMs; can the search find it unaided?
+BASES_FOR = {"lstm-u": [1] + BASES}
 KINDS = ["add", "count", "cmp", "mul"]
 
 
@@ -27,17 +30,17 @@ def genome_to_design(g):
     return Design(base=int(g["base"]), lsb_first=bool(g["lsb"]), mix=mix)
 
 
-def random_genome(rng):
-    return {"base": int(rng.choice(BASES)), "lsb": int(rng.integers(2)),
+def random_genome(rng, bases=BASES):
+    return {"base": int(rng.choice(bases)), "lsb": int(rng.integers(2)),
             "w": [float(rng.uniform(0.4, 1.0))] + [float(rng.choice([0, rng.uniform(0, .5)])) for _ in range(3)]}
 
 
-def mutate(g, rng):
+def mutate(g, rng, bases=BASES):
     g = json.loads(json.dumps(g))
     r = rng.random()
     if r < 0.3:
-        i = BASES.index(g["base"])
-        g["base"] = BASES[int(np.clip(i + rng.choice([-1, 1]), 0, len(BASES) - 1))]
+        i = bases.index(g["base"])
+        g["base"] = bases[int(np.clip(i + rng.choice([-1, 1]), 0, len(bases) - 1))]
     elif r < 0.45:
         g["lsb"] = 1 - g["lsb"]
     else:
@@ -64,10 +67,11 @@ def fitness(designs, pop):
 
 def search(name, gens=4, size=8, elite=3):
     pop = POPS[name]
-    rng = np.random.default_rng({"tf": 1, "lstm": 2, "mixed": 3}[name])
+    rng = np.random.default_rng({"tf": 1, "lstm": 2, "mixed": 3, "lstm-u": 4}[name])
+    bases = BASES_FOR.get(name, BASES)
     # seed the population with two classic human designs
     genomes = [{"base": 10, "lsb": 0, "w": [1, 0, 0, 0]}, {"base": 2, "lsb": 0, "w": [1, 0.3, 0, 0]}]
-    genomes += [random_genome(rng) for _ in range(size - len(genomes))]
+    genomes += [random_genome(rng, bases) for _ in range(size - len(genomes))]
     history = []
     for gen in range(gens + 1):
         fit = fitness([genome_to_design(g) for g in genomes], pop)
@@ -78,7 +82,7 @@ def search(name, gens=4, size=8, elite=3):
         if gen == gens:
             break
         parents = [genomes[i] for i in order[:elite]]
-        children = [mutate(parents[int(rng.integers(elite))], rng) for _ in range(size - elite)]
+        children = [mutate(parents[int(rng.integers(elite))], rng, bases) for _ in range(size - elite)]
         genomes = parents + children
     with open(f"{ROOT}/results/evolve_{name}.json", "w") as f:
         json.dump({"budget": BUDGET, "pop": pop, "history": history}, f, indent=1)
